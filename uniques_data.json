@@ -378,374 +378,73 @@
         "image_url": "https://diablo-api-a78ca.appspot.com.storage.googleapis.com/uniques/word-of-hakan.webp"
     },
     {
-        "type": "Mythic",
-        "label": "Ahavarion, Spear of Lycander",
+        "type": "Unique",
+        "label": "Arreat's Bearing",
         "class": "Generic",
         "description": "Descri\u00e7\u00e3o n\u00e3o informada.",
-        "image_url": "https://diablo-api-a78ca.appspot.com.storage.googleapis.com/uniques/ahavarion-spear-of-lycander.webp"
+        "image_url": "https://diablo-api-a78ca.appspot.com.storage.googleapis.com/uniques/arreats-bearing.webp"
     },
     {
         "type": "Unique",
-        "label": "Airidah's Inexorable Will",
-        "class": "druid",
-        "description": "Descri\u00e7\u00e3o n\u00e3o informada.",
-        "image_url": "https://diablo-api-a78ca.appspot.com.storage.googleapis.com/uniques/airidahs-inexorable-will.webp"
-    },
-    {
-        "type": "Unique",
-        "label": "Axial Conduit",
-        "class": "sorcerer",
-        "description": "Descri\u00e7\u00e3o n\u00e3o informada.",
-        "image_url": "https://diablo-api-a78ca.appspot.com.storage.googleapis.com/uniques/axial-conduit.webp"
-    },
-    {
-        "type": "Unique",
-        "label": "Azurewrath",
-        "class": "Generic",
-        "description": "Descri\u00e7\u00e3o n\u00e3o informada.",
-        "image_url": "https://diablo-api-a78ca.appspot.com.storage.googleapis.com/uniques/azurewrath.webp"
-    },
-    {
-        "type": "Unique",
-        "label": "Banished Lords Talisman",
+        "label": "Banished Lord's Talisman",
         "class": "Generic",
         "description": "Descri\u00e7\u00e3o n\u00e3o informada.",
         "image_url": "https://diablo-api-a78ca.appspot.com.storage.googleapis.com/uniques/banished-lords-talisman.webp"
     },
     {
         "type": "Unique",
-        "label": "Beastfall Boots",
+        "label": "Flickerstep",
         "class": "Generic",
         "description": "Descri\u00e7\u00e3o n\u00e3o informada.",
-        "image_url": "https://diablo-api-a78ca.appspot.com.storage.googleapis.com/uniques/beastfall-boots.webp"
+        "image_url": "https://diablo-api-a78ca.appspot.com.storage.googleapis.com/uniques/flickerstep.webp"
     },
     {
         "type": "Unique",
-        "label": "Blood Artisans Cuirass",
+        "label": "Mj\u00f6lnic Ryng",
         "class": "Generic",
         "description": "Descri\u00e7\u00e3o n\u00e3o informada.",
-        "image_url": "https://diablo-api-a78ca.appspot.com.storage.googleapis.com/uniques/blood-artisans-cuirass.webp"
+        "image_url": "https://diablo-api-a78ca.appspot.com.storage.googleapis.com/uniques/mjolnic-ryng.webp"
     },
     {
         "type": "Unique",
-        "label": "Blood Moon Breeches",
+        "label": "Path of Trag'Oul",
         "class": "Generic",
         "description": "Descri\u00e7\u00e3o n\u00e3o informada.",
-        "image_url": "https://diablo-api-a78ca.appspot.com.storage.googleapis.com/uniques/blood-moon-breeches.webp"
+        "image_url": "https://diablo-api-a78ca.appspot.com.storage.googleapis.com/uniques/path-of-tragoul.webp"
     },
     {
         "type": "Unique",
-        "label": "Blue Rose",
-        "class": "sorcerer",
-        "description": "Descri\u00e7\u00e3o n\u00e3o informada.",
-        "image_url": "https://diablo-api-a78ca.appspot.com.storage.googleapis.com/uniques/blue-rose.webp"
-    },
-    {
-        "type": "Unique",
-        "label": "Cruor's Embrace",
-        "class": "Generic",
-        "description": "Descri\u00e7\u00e3o n\u00e3o informada.",
-        "image_url": "https://diablo-api-a78ca.appspot.com.storage.googleapis.com/uniques/cruors-embrace.webp"
-    },
-    {
-        "type": "Unique",
-        "label": "Dolmen Stone",
-        "class": "druid",
-        "description": "Descri\u00e7\u00e3o n\u00e3o informada.",
-        "image_url": "https://diablo-api-a78ca.appspot.com.storage.googleapis.com/uniques/dolmen-stone.webp"
-    },
-    {
-        "type": "Unique",
-        "label": "Eaglehorn",
-        "class": "Generic",
-        "description": "Descri\u00e7\u00e3o n\u00e3o informada.",
-        "image_url": "https://diablo-api-a78ca.appspot.com.storage.googleapis.com/uniques/eaglehorn.webp"
-    },
-    {
-        "type": "Unique",
-        "label": "Earthbreaker",
-        "class": "Generic",
-        "description": "Descri\u00e7\u00e3o n\u00e3o informada.",
-        "image_url": "https://diablo-api-a78ca.appspot.com.storage.googleapis.com/uniques/earthbreaker.webp"
-    },
-    {
-        "type": "Unique",
-        "label": "Ebonpiercer",
-        "class": "Generic",
-        "description": "Descri\u00e7\u00e3o n\u00e3o informada.",
-        "image_url": "https://diablo-api-a78ca.appspot.com.storage.googleapis.com/uniques/ebonpiercer.webp"
-    },
-    {
-        "type": "Unique",
-        "label": "\u200dEsadora's Overflowing Cameo",
-        "class": "Generic",
-        "description": "Descri\u00e7\u00e3o n\u00e3o informada.",
-        "image_url": "https://diablo-api-a78ca.appspot.com.storage.googleapis.com/uniques/esadoras-overflowing-cameo.webp"
-    },
-    {
-        "type": "Unique",
-        "label": "flameweaver",
-        "class": "Generic",
-        "description": "Descri\u00e7\u00e3o n\u00e3o informada.",
-        "image_url": "https://diablo-api-a78ca.appspot.com.storage.googleapis.com/uniques/flameweaver.webp"
-    },
-    {
-        "type": "Unique",
-        "label": "Fleshrender",
-        "class": "Generic",
-        "description": "Descri\u00e7\u00e3o n\u00e3o informada.",
-        "image_url": "https://diablo-api-a78ca.appspot.com.storage.googleapis.com/uniques/fleshrender.webp"
-    },
-    {
-        "type": "Unique",
-        "label": "\u200dFractured Winterglass",
-        "class": "Generic",
-        "description": "Descri\u00e7\u00e3o n\u00e3o informada.",
-        "image_url": "https://diablo-api-a78ca.appspot.com.storage.googleapis.com/uniques/fractured-winterglass.webp"
-    },
-    {
-        "type": "Unique",
-        "label": "Godslayer Crown",
-        "class": "Generic",
-        "description": "Descri\u00e7\u00e3o n\u00e3o informada.",
-        "image_url": "https://diablo-api-a78ca.appspot.com.storage.googleapis.com/uniques/godslayer-crown.webp"
-    },
-    {
-        "type": "Unique",
-        "label": "Hunters Zenith",
-        "class": "druid",
-        "description": "Descri\u00e7\u00e3o n\u00e3o informada.",
-        "image_url": "https://diablo-api-a78ca.appspot.com.storage.googleapis.com/uniques/hunters-zenith.webp"
-    },
-    {
-        "type": "Unique",
-        "label": "Lidless Wall",
-        "class": "Generic",
-        "description": "Descri\u00e7\u00e3o n\u00e3o informada.",
-        "image_url": "https://diablo-api-a78ca.appspot.com.storage.googleapis.com/uniques/lidless-wall.webp"
-    },
-    {
-        "type": "Unique",
-        "label": "Mutilator Plate",
-        "class": "Generic",
-        "description": "Descri\u00e7\u00e3o n\u00e3o informada.",
-        "image_url": "https://diablo-api-a78ca.appspot.com.storage.googleapis.com/uniques/mutilator-plate.webp"
-    },
-    {
-        "type": "Unique",
-        "label": "Paingorger's Gauntlets",
-        "class": "Generic",
-        "description": "Descri\u00e7\u00e3o n\u00e3o informada.",
-        "image_url": "https://diablo-api-a78ca.appspot.com.storage.googleapis.com/uniques/paingorgers-gauntlets.webp"
-    },
-    {
-        "type": "Unique",
-        "label": "Rakanoths Wake",
-        "class": "Generic",
-        "description": "Descri\u00e7\u00e3o n\u00e3o informada.",
-        "image_url": "https://diablo-api-a78ca.appspot.com.storage.googleapis.com/uniques/rakanoths-wake.webp"
-    },
-    {
-        "type": "Unique",
-        "label": "Ramaladnis Magnum Opus",
-        "class": "Generic",
-        "description": "Descri\u00e7\u00e3o n\u00e3o informada.",
-        "image_url": "https://diablo-api-a78ca.appspot.com.storage.googleapis.com/uniques/ramaladnis-magnum-opus.webp"
-    },
-    {
-        "type": "Unique",
-        "label": "Ring of red Furor",
-        "class": "Generic",
-        "description": "Descri\u00e7\u00e3o n\u00e3o informada.",
-        "image_url": "https://diablo-api-a78ca.appspot.com.storage.googleapis.com/uniques/ring-of-red-furor.webp"
-    },
-    {
-        "type": "Unique",
-        "label": "Ring of the Ravenous",
-        "class": "Generic",
-        "description": "Descri\u00e7\u00e3o n\u00e3o informada.",
-        "image_url": "https://diablo-api-a78ca.appspot.com.storage.googleapis.com/uniques/ring-of-the-ravenous.webp"
-    },
-    {
-        "type": "Unique",
-        "label": "Ring of the Sacrilegious Soul",
-        "class": "Generic",
-        "description": "Descri\u00e7\u00e3o n\u00e3o informada.",
-        "image_url": "https://diablo-api-a78ca.appspot.com.storage.googleapis.com/uniques/ring-of-the-sacrilegious-soul.webp"
-    },
-    {
-        "type": "Unique",
-        "label": "Saboteurs Signet",
+        "label": "Saboteur's Signet",
         "class": "Generic",
         "description": "Descri\u00e7\u00e3o n\u00e3o informada.",
         "image_url": "https://diablo-api-a78ca.appspot.com.storage.googleapis.com/uniques/saboteurs-signet.webp"
     },
     {
         "type": "Unique",
-        "label": "Scoundrels Kiss",
+        "label": "Scoundrel's Kiss",
         "class": "Generic",
         "description": "Descri\u00e7\u00e3o n\u00e3o informada.",
         "image_url": "https://diablo-api-a78ca.appspot.com.storage.googleapis.com/uniques/scoundrels-kiss.webp"
     },
     {
         "type": "Unique",
-        "label": "Scoundrel's Leathers",
+        "label": "Shroud of Khanduras",
         "class": "Generic",
         "description": "Descri\u00e7\u00e3o n\u00e3o informada.",
-        "image_url": "https://diablo-api-a78ca.appspot.com.storage.googleapis.com/uniques/scoundrels-leathers.webp"
+        "image_url": "https://diablo-api-a78ca.appspot.com.storage.googleapis.com/uniques/shroud-of-khanduras.webp"
     },
     {
         "type": "Unique",
-        "label": "Soulbrand",
-        "class": "Generic",
-        "description": "Descri\u00e7\u00e3o n\u00e3o informada.",
-        "image_url": "https://diablo-api-a78ca.appspot.com.storage.googleapis.com/uniques/soulbrand.webp"
-    },
-    {
-        "type": "Unique",
-        "label": "Starfall Coronet",
-        "class": "Generic",
-        "description": "Descri\u00e7\u00e3o n\u00e3o informada.",
-        "image_url": "https://diablo-api-a78ca.appspot.com.storage.googleapis.com/uniques/starfall-coronet.webp"
-    },
-    {
-        "type": "Unique",
-        "label": "Storms Companion",
-        "class": "Generic",
-        "description": "Descri\u00e7\u00e3o n\u00e3o informada.",
-        "image_url": "https://diablo-api-a78ca.appspot.com.storage.googleapis.com/uniques/storms-companion.webp"
-    },
-    {
-        "type": "Unique",
-        "label": "Tal Rasha's Iridescent Loop",
-        "class": "Generic",
-        "description": "Descri\u00e7\u00e3o n\u00e3o informada.",
-        "image_url": "https://diablo-api-a78ca.appspot.com.storage.googleapis.com/uniques/tal-rashas-iridescent-loop.webp"
-    },
-    {
-        "type": "Unique",
-        "label": "Tassets of the Dawning Sky",
-        "class": "Generic",
-        "description": "Descri\u00e7\u00e3o n\u00e3o informada.",
-        "image_url": "https://diablo-api-a78ca.appspot.com.storage.googleapis.com/uniques/tassets-of-the-dawning-sky.webp"
-    },
-    {
-        "type": "Unique",
-        "label": "The Basilisk",
-        "class": "Generic",
-        "description": "Descri\u00e7\u00e3o n\u00e3o informada.",
-        "image_url": "https://diablo-api-a78ca.appspot.com.storage.googleapis.com/uniques/the-basilisk.webp"
-    },
-    {
-        "type": "Unique",
-        "label": "The Mortacrux",
-        "class": "Generic",
-        "description": "Descri\u00e7\u00e3o n\u00e3o informada.",
-        "image_url": "https://diablo-api-a78ca.appspot.com.storage.googleapis.com/uniques/the-mortacrux.webp"
-    },
-    {
-        "type": "Unique",
-        "label": "The Oculus",
-        "class": "Generic",
-        "description": "Descri\u00e7\u00e3o n\u00e3o informada.",
-        "image_url": "https://diablo-api-a78ca.appspot.com.storage.googleapis.com/uniques/the-oculus.webp"
-    },
-    {
-        "type": "Unique",
-        "label": "The Third Blade",
-        "class": "Generic",
-        "description": "Descri\u00e7\u00e3o n\u00e3o informada.",
-        "image_url": "https://diablo-api-a78ca.appspot.com.storage.googleapis.com/uniques/the-third-blade.webp"
-    },
-    {
-        "type": "Unique",
-        "label": "The Umbracrux",
-        "class": "Generic",
-        "description": "Descri\u00e7\u00e3o n\u00e3o informada.",
-        "image_url": "https://diablo-api-a78ca.appspot.com.storage.googleapis.com/uniques/the-umbracrux.webp"
-    },
-    {
-        "type": "Unique",
-        "label": "Tibault's Will",
-        "class": "Generic",
-        "description": "Descri\u00e7\u00e3o n\u00e3o informada.",
-        "image_url": "https://diablo-api-a78ca.appspot.com.storage.googleapis.com/uniques/tibaults-will.webp"
-    },
-    {
-        "type": "Unique",
-        "label": "Twin Strikes",
-        "class": "Generic",
-        "description": "Descri\u00e7\u00e3o n\u00e3o informada.",
-        "image_url": "https://diablo-api-a78ca.appspot.com.storage.googleapis.com/uniques/twin-strikes.webp"
-    },
-    {
-        "type": "Mythic",
-        "label": "Tyrael's Might",
-        "class": "Generic",
-        "description": "Descri\u00e7\u00e3o n\u00e3o informada.",
-        "image_url": "https://diablo-api-a78ca.appspot.com.storage.googleapis.com/uniques/tyraels-might.webp"
-    },
-    {
-        "type": "Unique",
-        "label": "Unbroken Chain",
+        "label": "Tuskhelm of Joritz the Mighty",
         "class": "barbarian",
         "description": "Descri\u00e7\u00e3o n\u00e3o informada.",
-        "image_url": "https://diablo-api-a78ca.appspot.com.storage.googleapis.com/uniques/unbroken-chain.webp"
+        "image_url": "https://diablo-api-a78ca.appspot.com.storage.googleapis.com/uniques/tuskhelm-of-joritz-the-mighty.webp"
     },
     {
         "type": "Unique",
-        "label": "Unsung Ascetics Wraps",
+        "label": "Unsung Ascetic's Wraps",
         "class": "Generic",
         "description": "Descri\u00e7\u00e3o n\u00e3o informada.",
         "image_url": "https://diablo-api-a78ca.appspot.com.storage.googleapis.com/uniques/unsung-ascetics-wraps.webp"
-    },
-    {
-        "type": "Unique",
-        "label": "Vasilys Prayer",
-        "class": "Generic",
-        "description": "Descri\u00e7\u00e3o n\u00e3o informada.",
-        "image_url": "https://diablo-api-a78ca.appspot.com.storage.googleapis.com/uniques/vasilys-prayer.webp"
-    },
-    {
-        "type": "Unique",
-        "label": "Vox Omnium",
-        "class": "Generic",
-        "description": "Descri\u00e7\u00e3o n\u00e3o informada.",
-        "image_url": "https://diablo-api-a78ca.appspot.com.storage.googleapis.com/uniques/vox-omnium.webp"
-    },
-    {
-        "type": "Unique",
-        "label": "Wildheart Hunger",
-        "class": "Generic",
-        "description": "Descri\u00e7\u00e3o n\u00e3o informada.",
-        "image_url": "https://diablo-api-a78ca.appspot.com.storage.googleapis.com/uniques/wildheart-hunger.webp"
-    },
-    {
-        "type": "Unique",
-        "label": "Writhing Band of Trickery",
-        "class": "Generic",
-        "description": "Descri\u00e7\u00e3o n\u00e3o informada.",
-        "image_url": "https://diablo-api-a78ca.appspot.com.storage.googleapis.com/uniques/writhing-band-of-trickery.webp"
-    },
-    {
-        "type": "Unique",
-        "label": "X'Fal's Corroded Signet",
-        "class": "Generic",
-        "description": "Descri\u00e7\u00e3o n\u00e3o informada.",
-        "image_url": "https://diablo-api-a78ca.appspot.com.storage.googleapis.com/uniques/xfals-corroded-signet.webp"
-    },
-    {
-        "type": "Unique",
-        "label": "Yen's Blessing",
-        "class": "Generic",
-        "description": "Descri\u00e7\u00e3o n\u00e3o informada.",
-        "image_url": "https://diablo-api-a78ca.appspot.com.storage.googleapis.com/uniques/yens-blessing.webp"
-    },
-    {
-        "type": "Unique",
-        "label": "\u200dArreat's Bearing",
-        "class": "Generic",
-        "description": "Descri\u00e7\u00e3o n\u00e3o informada.",
-        "image_url": "https://diablo-api-a78ca.appspot.com.storage.googleapis.com/uniques/\u200darreats-bearing.webp"
     }
 ]
