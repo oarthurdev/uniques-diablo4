@@ -23,7 +23,7 @@ def battle_net_login():
     state = secrets.token_urlsafe()
     session['oauth_state'] = state
     client_id = '61903ba666634e469e7b4977be4972f4'
-    redirect_uri = url_for('callback', _external=True)
+    redirect_uri = 'https://uniques-diablo4.vercel.app/callback'  # Substitua pela URL da sua aplicação Vercel
     scope = 'openid'
     auth_url = (
         f"https://battle.net/oauth/authorize?client_id={client_id}"
