@@ -119,6 +119,10 @@ def add_favorite():
     data = request.json
     item_name = data.get('item_name')
     user_info = session.get('user_info')
+    
+    # Adicionar log para verificar o conteúdo da sessão
+    print("Sessão do usuário:", session)
+    
     if not user_info:
         return jsonify({'error': 'User not logged in', 'success': False}), 403
 
