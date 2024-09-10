@@ -1,4 +1,4 @@
-from flask import Flask, abort, render_template, Response, request, session, url_for, redirect, jsonify
+from flask import abort, Flask, render_template, Response, request, session, url_for, redirect, jsonify
 import requests
 import json
 import os
@@ -340,5 +340,6 @@ def get_uniques():
     ]
     return uniques
 
-# Create the app instance
-app = create_app()
+if __name__ == '__main__':
+    app = create_app()
+    app.run(debug=True)
