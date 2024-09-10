@@ -6,7 +6,7 @@ import time
 import secrets
 
 app = Flask(__name__)
-app.secret_key = secrets.token_hex(16)  # Necessário para sessões
+app.secret_key = secrets.token_hex(16)
 
 JSON_FILE_PATH = 'uniques_data.json'
 ITEMS_PER_PAGE = 6  # Ajuste conforme necessário
@@ -120,16 +120,16 @@ def add_favorite():
     item_name = data.get('item_name')
     user_info = session.get('user_info')
     
-    # Adicionar log para verificar o conteúdo da sessão
-    print("Sessão do usuário:", session)
-    
+    print("Sessão do usuário na add_favorite:", session)
+    print("Informações do usuário:", user_info)
+
     if not user_info:
         return jsonify({'error': 'User not logged in', 'success': False}), 403
 
     if not item_name:
         return jsonify({'error': 'Item name is required', 'success': False}), 400
 
-    user_id = user_info['id']
+    user_id = user_info.get('id')
     add_to_favorites(user_id, item_name)
     return jsonify({'status': 'Favorite added successfully', 'success': True}), 200
 
