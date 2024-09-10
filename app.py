@@ -70,7 +70,6 @@ def callback():
     
     user_info = user_response.json()
     session['user_info'] = user_info
-    print("Callback> ", session);
     
     return redirect(url_for('index'))
 
@@ -100,7 +99,7 @@ def index():
 
     all_classes = sorted(set(unique['class'] for unique in uniques if unique['class'] and unique['class'] != 'Classe não disponível'))
 
-    user_info = session.get('user_info')
+    user_info = session['user_info']
     favorites = load_favorites_for_user(user_info['id']) if user_info else []
 
     return render_template(
@@ -119,7 +118,7 @@ def index():
 def add_favorite():
     data = request.json
     item_name = data.get('item_name')
-    user_info = session.get('user_info')
+    user_info = session['user_info']
     
     # Adicionar log para verificar o conteúdo da sessão
     print("Sessão do usuário:", session)
@@ -138,7 +137,7 @@ def add_favorite():
 def remove_favorite():
     data = request.json
     item_name = data.get('item_name')
-    user_info = session.get('user_info')
+    user_info = session['user_info']
     if not user_info:
         return jsonify({'error': 'User not logged in', 'success': False}), 403
 
