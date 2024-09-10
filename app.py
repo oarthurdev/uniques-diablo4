@@ -69,7 +69,14 @@ def callback():
         return "Failed to get user information", 500
     
     user_info = user_response.json()
+    
+    # Adicionar logs para verificar o conteúdo do user_info
+    print("Informações do usuário:", user_info)
+    
     session['user_info'] = user_info
+
+    # Adicionar logs para verificar a sessão após a configuração
+    print("Sessão do usuário após login:", session)
     
     return redirect(url_for('index'))
 
