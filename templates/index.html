@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diablo 4 Uniques</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-image: url("{{ url_for('static', filename='assets/images/bg.jpg') }}");
+            background-size: cover;
+            background-attachment: fixed;
+            background-position: bottom;
+            color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+        }
+        .header {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 8px;
+        }
+        .header img {
+            border-radius: 50%;
+            margin-right: 10px;
+            width: 40px;
+            height: 40px;
+        }
+        .header .battle-tag {
+            color: #f0f0f0;
+            margin-right: 15px;
+        }
+        .header .logout-btn {
+            color: #f0f0f0;
+            background-color: #dc3545;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        .header .logout-btn:hover {
+            background-color: #c82333;
+        }
+        .logout-btn svg {
+            width: 24px;
+            height: 24px;
+        }
+        .login-btn {
+            display: flex;
+            align-items: center;
+            background-color: #148eff;
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 4px;
+            text-decoration: none;
+            border: none;
+        }
+        .login-btn svg {
+            width: 24px;
+            height: 24px;
+            margin-right: 8px;
+        }
+        .login-btn:hover {
+            color: #fff;
+            text-decoration: none;
+            background-color: #0e6bbf;
+        }
+        .container {
+            background-color: rgba(0, 0, 0, 0.6);
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .card {
+            margin-bottom: 20px;
+            background-color: #333;
+            border: 1px solid #444;
+        }
+        .image-container {
+            height: 150px;
+            width: 150px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            padding: 10px;
+            background-color: #222;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        .image-container img {
+            width: 100%;
+            height: auto;
+            max-height: 100%;
+            object-fit: cover;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+        }
+        .card-title, .card-text {
+            color: #f0f0f0;
+        }
+        .modal-content {
+            background-color: #222;
+        }
+        .modal-body {
+            padding: 0;
+        }
+        .modal-body img {
+            width: 100%;
+            max-width: 500px;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+        }
+        .pagination {
+            margin-top: 20px;
+        }
+        .pagination .page-item {
+            background-color: #444;
+            border: 1px solid #555;
+        }
+        .pagination .page-item .page-link:hover {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+        .pagination .page-link {
+            color: #f0f0f0;
+            background-color: #444;
+        }
+        .pagination .page-item.active .page-link {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+        .pagination .page-item.disabled .page-link {
+            color: #fff;
+            cursor: not-allowed;
+            background-color: #222;
+        }
+        .login-btn {
+            display: flex;
+            justify-content: center;
+        }
+        .suggestions {
+            color: black;
+            max-height: 200px;
+            overflow-y: auto;
+            position: absolute;
+            z-index: 1000;
+            background: #fff;
+            width: 100%;
+            top: 100%;
+            left: 0;
+        }
+        .suggestions div {
+            padding: 8px;
+            cursor: pointer;
+        }
+        .suggestions div:hover {
+            background: #eee;
+        }
+        .image-container.mythic {
+            border: 2px solid #8e2de2; /* Cor roxa */
+        }
+    </style>
+</head>
+<body>
+    <!-- Header with Battle Tag, Profile Image, and Logout Button -->
+    <div class="header">
+        {% if user_info %}
+            <span class="battle-tag">{{ user_info.battletag }}</span>
+            <form action="{{ url_for('logout') }}" method="POST" style="margin: 0;">
+                <button type="submit" class="logout-btn" aria-label="Logout">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-log-out">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                </button>
+            </form>
+        {% else %}
+            <a href="{{ url_for('battle_net_login') }}" class="login-btn">
+                <svg focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 580.4">
+                    <path fill="#fff" d="M473.5 197.6c-75.9-35.1-185.1-57.4-287.8-49.1 5.1-34 17.9-57.7 38.7-62.7 28.7-6.9 60 12 89.8 46.3 19.5 2.5 42.7 7 58.9 10.7C318.7 40.5 245.7-16.8 190.2 4.4 148 20.5 126.4 78.6 129 156.7c-55 11.7-97.9 32.5-125.4 62.4-1.4 1.6-4.5 5.7-3.4 7.6.9 1.5 3.6-.2 4.9-1 31.8-22.3 72.6-34.3 125.7-41.9 7.6 83.3 42.8 189 101.4 273.8-32 12.6-58.9 13.4-73.6-2.2-20.3-21.4-19.6-58-4.8-101-7.6-18.2-15.3-40.5-20.1-56.3-61.6 98.3-74.8 190.2-28.7 227.7 35.1 28.5 96.2 18.2 162.5-23.1 37.6 41.8 77.1 68.5 116.7 77.3 2.1.4 7.2 1.1 8.3-.8.9-1.5-2-3.1-3.3-3.7-35.2-16.4-66-45.7-99.1-87.9 68.4-48.2 142.3-131.6 186.4-224.7 26.9 21.5 41 44.3 34.9 64.9-8.4 28.3-40.4 46-85.1 54.6-12 15.7-27.4 33.5-38.7 45.6 115.8 4 202-30.5 211.4-89.1 7.2-44.6-32.4-92.4-101.3-129.2 17.4-53.5 20.8-101 8.6-139.7-.7-2-2.6-6.8-4.9-6.8-1.7 0-1.7 3.3-1.6 4.7 3.6 38.6-6.3 80-26.3 129.7zM260.2 444.3c-49-78.6-77.2-171.2-77.1-264.8 92.6-3.1 186.9 18.7 267.9 65.7-43.6 81.7-109.6 152.5-190.8 199.1z"/>
+                </svg>
+                Login
+            </a>
+        {% endif %}
+    </div>
+
+    <div class="container">
+        <h1 class="text-center">Diablo IV - Unique Items</h1><br />
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <select id="classFilter" class="form-control">
+                    <option value="">Todas as Classes</option>
+                    {% for cls in all_classes %}
+                        <option value="{{ cls }}" {% if filter_class == cls %}selected{% endif %}>{{ cls }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-8 search-container">
+                <input type="text" id="search" class="form-control" placeholder="Digite para pesquisar...">
+                <div id="suggestions" class="suggestions"></div>
+            </div>
+        </div>
+        <div class="row">
+            <div id="selectedNames" class="col-md-12">
+                <!-- Selected names will be displayed here -->
+            </div>
+        </div>
+        <div class="row" id="uniquesContainer">
+            
+        </div>
+        <nav>
+            <ul class="pagination justify-content-center" id="pagination">
+                <!-- A paginação será gerada dinamicamente aqui -->
+            </ul>
+        </nav>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="imageModal" tabindex="-1" role="dialog" aria-labelledby="imageModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="imageModalLabel">Imagem Expandida</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <img id="modalImage" src="" alt="Imagem Expandida">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script id="uniquesData" type="application/json">
+        {{ uniques | tojson | safe }}
+    </script>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="{{ url_for('static', filename='js/search.js') }}"></script>
+    <script>
+        const ITEMS_PER_PAGE = 6;
+        let currentPage = {{ page }};
+        let allItems = [];
+        let filteredItems = {{ uniques | tojson | safe }};
+        let total_pages = {{ total_pages }};
+        let favorites = new Set({{ favorites | tojson | safe }}.map(item => item.toLowerCase()));
+
+        document.addEventListener("DOMContentLoaded", function() {
+        try {
+            // Obtenha a string JSON do elemento script
+            const jsonString = document.getElementById('uniquesData').textContent;
+
+            // Decodifique o JSON
+            allItems = JSON.parse(jsonString);
+
+            // Verifique se allItems é um array
+            if (!Array.isArray(allItems)) {
+                throw new Error('Os dados JSON não são um array.');
+            }
+
+            // Renderize os itens
+            const container = document.getElementById('uniquesContainer');
+            container.innerHTML = allItems.map(item => `
+                <div class="col-md-4 mb-4 item" data-name="${item.name.toLowerCase()}" data-class="${item.class.toLowerCase()}">
+                    <div class="card">
+                        <div class="image-container ${item.type === 'Mythic' ? 'mythic' : ''}" 
+                            data-toggle="modal" 
+                            data-target="#imageModal" 
+                            data-image-url="${item.image_url}" 
+                            data-item-name="${item.name}">
+                            <img src="http://localhost:5000/image?name=${item.name}" alt="${item.name}">
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title">${item.name}</h5>
+                            <p class="card-text">Type: ${item.type}</p>
+                            <p class="card-text">Classe: ${item.class}</p>
+                            <p class="card-text">Poder: ${item.power}</p>
+                            <button class="btn btn-outline-primary favorite-btn" 
+                                    data-item-name="${item.name}">
+                                ${favorites.has(item.name.toLowerCase()) ? '⭐ Favorito' : '☆ Adicionar aos Favoritos'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            // Atualize os botões de favoritos ao carregar
+            updateFavoriteButtons();
+        } catch (e) {
+            console.error('Erro ao processar o JSON:', e);
+        }
+    });
+    
+        function updatePagination(total_page) {
+            const pagination = document.getElementById('pagination');
+            const totalPages = total_page;
+            pagination.innerHTML = '';
+
+            // Helper function to create a page item
+            function createPageItem(page, isActive = false, isDisabled = false, label = page) {
+                const pageItem = document.createElement('li');
+                pageItem.className = `page-item ${isActive ? 'active' : ''} ${isDisabled ? 'disabled' : ''}`;
+                pageItem.innerHTML = `<a class="page-link" href="#">${label}</a>`;
+                return pageItem;
+            }
+
+            // First button
+            pagination.appendChild(createPageItem(1, currentPage === 1, currentPage === 1, 'First'));
+
+            // Previous button
+            pagination.appendChild(createPageItem('Previous', currentPage === 1, currentPage === 1));
+
+            // Page numbers
+            const pageRange = 5; // Número de páginas a exibir ao redor da página atual
+            let startPage = Math.max(1, currentPage - Math.floor(pageRange / 2));
+            let endPage = Math.min(totalPages, currentPage + Math.floor(pageRange / 2));
+
+            if (currentPage - Math.floor(pageRange / 2) <= 1) {
+                endPage = Math.min(totalPages, pageRange);
+            }
+            if (currentPage + Math.floor(pageRange / 2) >= totalPages) {
+                startPage = Math.max(1, totalPages - pageRange + 1);
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                pagination.appendChild(createPageItem(i, i === currentPage));
+            }
+
+            // Next button
+            pagination.appendChild(createPageItem('Next', currentPage === totalPages, currentPage === totalPages));
+
+            // Last button
+            pagination.appendChild(createPageItem(totalPages, currentPage === totalPages, currentPage === totalPages, 'Last'));
+
+            // Event listeners
+            pagination.querySelectorAll('.page-link').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    let page = parseInt(this.textContent) || (this.textContent === 'Next' ? currentPage + 1 : this.textContent === 'Previous' ? currentPage - 1 : this.textContent === 'First' ? 1 : totalPages);
+                    page = Math.max(1, Math.min(page, totalPages));
+                    const classFilter = encodeURIComponent(document.getElementById('classFilter').value);
+                    const nameFilter = encodeURIComponent(document.getElementById('search').value);
+                    window.location.href = `/?class=${classFilter}&name=${nameFilter}&page=${page}`;
+                });
+            });
+        }
+    
+        function applyFilters() {
+            const selectedClass = new URLSearchParams(window.location.search).get('class') || '';
+            const nameFilter = new URLSearchParams(window.location.search).get('name') || '';
+            const filterPage = parseInt(new URLSearchParams(window.location.search).get('page')) || 1;
+    
+            document.getElementById('classFilter').value = selectedClass;
+            document.getElementById('search').value = nameFilter;
+            currentPage = filterPage;
+    
+            filterItems();
+            updatePagination(total_pages);
+        }
+    
+        function filterItems() {
+            const selectedClass = document.getElementById('classFilter').value.toLowerCase();
+            const nameFilter = document.getElementById('search').value.toLowerCase();
+            const uniques = document.querySelectorAll('#uniquesContainer .item');
+    
+            let filteredItems = 0;
+    
+            uniques.forEach(function(card) {
+                const itemName = card.getAttribute('data-name');
+                const itemClass = card.getAttribute('data-class');
+                let showCard = true;
+    
+                if (selectedClass && itemClass.indexOf(selectedClass) === -1) {
+                    showCard = false;
+                }
+    
+                if (nameFilter && !itemName.includes(nameFilter)) {
+                    showCard = false;
+                }
+    
+                card.style.display = showCard ? 'block' : 'none';
+                if (showCard) filteredItems++;
+            });
+            // Atualiza a paginação com base no número total de itens filtrados
+            const totalPages = Math.ceil(filteredItems / ITEMS_PER_PAGE);
+
+            if(filteredItems != 0) {
+                updatePagination(total_pages);
+            } else {
+                updatePagination(totalPages);
+            }
+        }
+    
+        function updateSuggestions() {
+            if (!allItems) return;
+    
+            const searchInput = document.getElementById('search');
+            const suggestionsContainer = document.getElementById('suggestions');
+            const query = searchInput.value.toLowerCase();
+    
+            if (query.length === 0) {
+                suggestionsContainer.innerHTML = '';
+                filterItems(); // Exibir todos os itens novamente
+                return;
+            }
+    
+            const filteredItems = allItems.filter(item => item.name.toLowerCase().includes(query));
+            suggestionsContainer.innerHTML = filteredItems.map(item => 
+                `<div data-name="${item.name}">${item.name}</div>`
+            ).join('');
+    
+            suggestionsContainer.querySelectorAll('div').forEach(div => {
+                div.addEventListener('click', function() {
+                    searchInput.value = this.getAttribute('data-name');
+                    suggestionsContainer.innerHTML = '';
+                    filterItems();
+                });
+            });
+        }
+
+        function toggleFavorite(itemName) {
+            const itemNameLower = itemName.toLowerCase();
+            const isFavorite = favorites.has(itemNameLower);
+            const url = isFavorite ? '/remove_favorite' : '/add_favorite';
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ item_name: itemName })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (isFavorite) {
+                        favorites.delete(itemNameLower);
+                    } else {
+                        favorites.add(itemNameLower);
+                    }
+                    console.log('Updated favorites:', Array.from(favorites));
+                    updateFavoriteButtons();
+                }
+            });
+        }
+
+        function updateFavoriteButtons() {
+            document.querySelectorAll('.favorite-btn').forEach(button => {
+                const itemName = button.getAttribute('data-item-name');
+                if (favorites.has(itemName.toLowerCase())) {
+                    button.textContent = '⭐ Favorito';
+                } else {
+                    button.textContent = '☆ Adicionar aos Favoritos';
+                }
+            });
+        }
+    
+        $(document).ready(function() {
+            $('.image-container').on('click', function() {
+                const imageUrl = $(this).data('image-url');
+                const itemName = $(this).data('item-name');
+                $('#modalImage').attr('src', imageUrl);
+                $('#imageModalLabel').text(itemName);
+            });
+
+            $('#uniquesContainer').on('click', '.favorite-btn', function() {
+                const itemName = $(this).data('item-name');
+                toggleFavorite(itemName);
+            });
+        });
+
+        document.getElementById('search').addEventListener('input', function() {
+            updateSuggestions();
+        });
+    
+        applyFilters();
+
+        document.getElementById('classFilter').addEventListener('change', function() {
+            const classFilter = encodeURIComponent(this.value);
+            const nameFilter = encodeURIComponent(document.getElementById('search').value);
+            window.location.href = `/?class=${classFilter}&name=${nameFilter}&page=1`;
+        });
+    </script>
+</body>
+</html>
