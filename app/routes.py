@@ -100,7 +100,7 @@ def index():
         favorites = [fav.item_name for fav in Favorite.query.filter_by(user_id=user_id).all()]
 
     return render_template(
-        'index.html',
+        './index.html',
         uniques=paginated_uniques,
         all_classes=all_classes,
         filter_class=filter_class,
