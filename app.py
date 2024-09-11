@@ -78,7 +78,7 @@ def callback():
     user_info = user_response.json()
     session['user_info'] = user_info
     
-    return session
+    return redirect(url_for('index'))
 
 @app.route('/update')
 def update():
@@ -109,6 +109,7 @@ def index():
     user_info = session.get('user_info')
     favorites = load_favorites_for_user(user_info['id']) if user_info else []
 
+    print(user_info)
     return render_template(
         'index.html',
         uniques=paginated_uniques,
