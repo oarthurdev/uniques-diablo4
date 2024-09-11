@@ -79,6 +79,7 @@ def callback():
     # Cria um JWT para o usuário
     access_token = create_access_token(identity=user_info)
     
+    print(access_token)
     # Redireciona o usuário para a página inicial com o token JWT
     return redirect(url_for('index', _external=True, _scheme='https'))
 
