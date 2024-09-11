@@ -14,11 +14,11 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
 class User(db.Model):
-    id = db.Column(db.String, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
     data = db.Column(db.JSON)
 
 class Favorite(db.Model):
-    user_id = db.Column(db.String, db.ForeignKey('user.id'), primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
     item_name = db.Column(db.String, primary_key=True)
     user = db.relationship('User', backref='favorites')
 
