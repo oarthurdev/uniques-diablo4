@@ -8,6 +8,12 @@ import secrets
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(16)
 
+app.config.update(
+    SESSION_COOKIE_SECURE=True,  # Apenas envia cookies em conexões HTTPS
+    SESSION_COOKIE_HTTPONLY=True, # Impede o acesso aos cookies via JavaScript
+    SESSION_COOKIE_SAMESITE='Lax', # Protege contra ataques CSRF
+)
+
 JSON_FILE_PATH = 'uniques_data.json'
 ITEMS_PER_PAGE = 6  # Ajuste conforme necessário
 PLACEHOLDER_IMAGE_URL = 'https://via.placeholder.com/200x200'
