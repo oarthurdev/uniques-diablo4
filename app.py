@@ -69,7 +69,7 @@ def callback():
 
     client_id = '61903ba666634e469e7b4977be4972f4'
     client_secret = 'bc4TrOFgi6sO45EWpCWKFVdnwDAEfyyv'
-    redirect_uri = "https://uniques-diablo4.vercel.app/"
+    redirect_uri = "https://uniques-diablo4.vercel.app/callback"
     token_url = 'https://oauth.battle.net/token'
     payload = {
         'grant_type': 'authorization_code',
@@ -85,7 +85,6 @@ def callback():
         token_data = response.json()
         access_token = token_data.get('access_token')
         
-        print(access_token)
         user_info_url = 'https://oauth.battle.net/userinfo'
         user_response = requests.get(user_info_url, headers={'Authorization': f'Bearer {access_token}'})
         user_response.raise_for_status()
