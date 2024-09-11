@@ -72,7 +72,7 @@ def callback():
 
     client_id = '61903ba666634e469e7b4977be4972f4'
     client_secret = 'bc4TrOFgi6sO45EWpCWKFVdnwDAEfyyv'
-    redirect_uri = "https://uniques-diablo4.vercel.app/callback"
+    redirect_uri = "https://uniques-diablo4.vercel.app/"
     token_url = 'https://oauth.battle.net/token'
     payload = {
         'grant_type': 'authorization_code',
@@ -104,6 +104,7 @@ def callback():
     # Store user info in the database
     user_id = user_info.get('id')
     existing_user = User.query.get(user_id)
+
     if not existing_user:
         new_user = User(id=user_id, data=user_info)
         db.session.add(new_user)
