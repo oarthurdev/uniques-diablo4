@@ -111,7 +111,6 @@ def index():
     user_info = session.get('user_info')
     favorites = load_favorites_for_user(user_info['id']) if user_info else []
 
-    print(paginated_uniques)
     return render_template(
         'index.html',
         uniques=paginated_uniques,
@@ -150,6 +149,7 @@ def remove_favorite():
     data = request.json
     item_name = data.get('item_name')
     user_info = session.get('user_info')
+
     print("Sessão na remove_favorite:", session)
     print("Informações do usuário:", user_info)
 
@@ -226,19 +226,42 @@ def update_local_data():
     existing_labels = {item.get('label', '').lower() for item in existing_data}
 
     updated_data = []
-
     for item in codex_data:
         if item.get('type') == 'Unique':
             label = item.get('label', '').lower()
             if label in codex_name_to_item:
                 codex_name_to_item[label]['image_url'] = item.get('image_url', 'https://via.placeholder.com/200x200')
-                codex_name_to_item[label]['description'] = item.get('description', 'Descrição não disponível')
-                codex_name_to_item[label]['class'] = item.get('class', 'Classe não disponível')
+                updated_data.append({
+                    'type': codex_name_to_item[label]['type'],
+                    'label': item.get('label', ''),
+                    'class': codex_name_to_item[label]['class'],
+                    'description': codex_name_to_item[label]['description'],
+                    'image_url': codex_name_to_item[label]['image_url']
+                })
 
-    updated_data.extend(codex_name_to_item.values())
+    for item in uniques_data:
+        label = item.get('name', '').lower()
+        item_type = 'Mythic' if item.get('mythic', False) else 'Unique'
+        if label not in existing_labels:
+            updated_data.append({
+                'type': item_type,
+                'label': item.get('name', ''),
+                'class': item.get('class', 'Generic'),
+                'description': item.get('description', 'Descrição não informada.'),
+                'image_url': item.get('image_url', 'https://via.placeholder.com/200x200')
+            })
+        else:
+            for updated_item in updated_data:
+                if updated_item.get('label', '').lower() == label:
+                    updated_item['image_url'] = item.get('image_url', 'https://via.placeholder.com/200x200')
+                    updated_item['type'] = item_type
 
+    save_data_to_file(updated_data)
+
+# Função para salvar dados no arquivo
+def save_data_to_file(data):
     with open(JSON_FILE_PATH, 'w') as f:
-        json.dump(updated_data, f, indent=4)
+        json.dump(data, f, indent=4)
 
 # Função para carregar dados do arquivo
 def load_data_from_file():
