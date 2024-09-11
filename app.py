@@ -28,11 +28,6 @@ JSON_FILE_PATH = 'uniques_data.json'
 ITEMS_PER_PAGE = 6  # Ajuste conforme necessário
 PLACEHOLDER_IMAGE_URL = 'https://via.placeholder.com/200x200'
 
-@app.before_first_request
-def create_tables():
-    with app.app_context():
-        db.create_all()
-
 @app.after_request
 def add_header(response):
     response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
@@ -328,4 +323,6 @@ def get_uniques():
     return uniques
 
 if __name__ == '__main__':
+    with app.app_context():
+        db.create_all()
     app.run(debug=True)
