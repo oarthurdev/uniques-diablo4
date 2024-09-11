@@ -54,6 +54,7 @@ def callback():
         'client_secret': client_secret
     }
 
+    # Obter o token de acesso
     response = requests.post(token_url, data=payload)
     if response.status_code != 200:
         return "Failed to obtain access token", 500
@@ -63,6 +64,7 @@ def callback():
     if not access_token:
         return "Access token not received", 500
     
+    # Obter informações do usuário
     user_info_url = 'https://oauth.battle.net/userinfo'
     user_response = requests.get(user_info_url, headers={'Authorization': f'Bearer {access_token}'})
     if user_response.status_code != 200:
@@ -71,6 +73,7 @@ def callback():
     user_info = user_response.json()
     session['user_info'] = user_info
     
+    # Redirecionar para a página inicial
     return redirect(url_for('index'))
 
 @app.route('/update')
