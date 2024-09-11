@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify, redirect, url_for, session, render_template, Response, abort
-from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
+from flask_sqlalchemy import SQLAlchemy
 import requests
 import json
 import os
@@ -8,14 +8,25 @@ import secrets
 
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(16)
-app.config['JWT_SECRET_KEY'] = secrets.token_hex(16)  # Alterar para sua chave secreta
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-jwt = JWTManager(app)
+db = SQLAlchemy(app)
+
+# Model for storing user sessions
+class User(db.Model):
+    id = db.Column(db.String, primary_key=True)
+    data = db.Column(db.JSON)
+
+# Model for storing user favorites
+class Favorite(db.Model):
+    user_id = db.Column(db.String, db.ForeignKey('user.id'), primary_key=True)
+    item_name = db.Column(db.String, primary_key=True)
+    user = db.relationship('User', backref='favorites')
 
 JSON_FILE_PATH = 'uniques_data.json'
-ITEMS_PER_PAGE = 6  # Ajuste conforme necessário
+ITEMS_PER_PAGE = 6  # Adjust as necessary
 PLACEHOLDER_IMAGE_URL = 'https://via.placeholder.com/200x200'
-FAVORITES_FILE_PATH = 'favorites.json'
 
 @app.after_request
 def add_header(response):
@@ -23,6 +34,11 @@ def add_header(response):
     response.headers['Pragma'] = 'no-cache'
     response.headers['Expires'] = '0'
     return response
+
+@app.route('/logout', methods=['POST'])
+def logout():
+    session.pop('user_info', None)
+    return redirect(url_for('index'))
 
 @app.route('/login')
 def battle_net_login():
@@ -75,53 +91,50 @@ def callback():
         return "Failed to get user information", 500
     
     user_info = user_response.json()
+    session['user_info'] = user_info
     
-    # Cria um JWT para o usuário
-    access_token = create_access_token(identity=user_info)
+    user = User.query.get(user_info['id'])
+    if not user:
+        user = User(id=user_info['id'], data=user_info)
+        db.session.add(user)
+        db.session.commit()
+    else:
+        user.data = user_info
+        db.session.commit()
     
-    print(access_token)
-    # Redireciona o usuário para a página inicial com o token JWT
-    return redirect(url_for('index', _external=True, _scheme='https'))
+    return redirect(url_for('index'))
 
 @app.route('/update')
 def update():
     update_local_data()
     return jsonify({'status': 'Data updated successfully'}), 200
 
-from flask_jwt_extended import jwt_required, get_jwt_identity
-
 @app.route('/')
-@jwt_required()
 def index():
-    # Obtém as informações do usuário a partir do JWT
-    user_info = get_jwt_identity()
-    user_id = user_info.get('id') if user_info else None
-
-    # Carrega os dados dos únicos (uniques)
     uniques = get_uniques() or []
     filter_class = request.args.get('class', '')
     filter_name = request.args.get('name', '').lower()
     page = int(request.args.get('page', 1))
 
-    # Filtra os dados
     filtered_uniques = [
         unique for unique in uniques
         if (not filter_class or unique['class'].lower() == filter_class.lower()) and 
         (not filter_name or filter_name in unique['name'].lower())
     ]
 
-    # Paginação
     total_items = len(filtered_uniques)
     total_pages = (total_items + ITEMS_PER_PAGE - 1) // ITEMS_PER_PAGE
     start = (page - 1) * ITEMS_PER_PAGE
     end = start + ITEMS_PER_PAGE
     paginated_uniques = filtered_uniques[start:end]
 
-    # Obtém todas as classes disponíveis
     all_classes = sorted(set(unique['class'] for unique in uniques if unique['class'] and unique['class'] != 'Classe não disponível'))
 
-    # Carrega favoritos do usuário
-    favorites = load_favorites_for_user(user_id) if user_id else []
+    user_info = session.get('user_info')
+    if user_info:
+        favorites = [fav.item_name for fav in Favorite.query.filter_by(user_id=user_info['id']).all()]
+    else:
+        favorites = []
 
     return render_template(
         'index.html',
@@ -135,41 +148,47 @@ def index():
         favorites=favorites
     )
 
-
-@app.route('/logout', methods=['POST'])
-@jwt_required()
-def logout():
-    return jsonify({'msg': 'Logout successful'}), 200
-
 @app.route('/add_favorite', methods=['POST'])
-@jwt_required()
 def add_favorite():
     data = request.json
     item_name = data.get('item_name')
+    user_info = session.get('user_info')
     
-    current_user = get_jwt_identity()
-    user_id = current_user.get('id')
-    
+    if not user_info:
+        return jsonify({'error': 'User not logged in', 'success': False}), 403
+
     if not item_name:
         return jsonify({'error': 'Item name is required', 'success': False}), 400
 
-    add_to_favorites(user_id, item_name)
-    return jsonify({'status': 'Favorite added successfully', 'success': True}), 200
+    user_id = user_info.get('id')
+    if not Favorite.query.filter_by(user_id=user_id, item_name=item_name).first():
+        favorite = Favorite(user_id=user_id, item_name=item_name)
+        db.session.add(favorite)
+        db.session.commit()
+        return jsonify({'status': 'Favorite added successfully', 'success': True}), 200
+    else:
+        return jsonify({'error': 'Item already in favorites', 'success': False}), 400
 
 @app.route('/remove_favorite', methods=['POST'])
-@jwt_required()
 def remove_favorite():
     data = request.json
     item_name = data.get('item_name')
+    user_info = session.get('user_info')
     
-    current_user = get_jwt_identity()
-    user_id = current_user.get('id')
-    
+    if not user_info:
+        return jsonify({'error': 'User not logged in', 'success': False}), 403
+
     if not item_name:
         return jsonify({'error': 'Item name is required', 'success': False}), 400
 
-    remove_from_favorites(user_id, item_name)
-    return jsonify({'status': 'Favorite removed successfully', 'success': True}), 200
+    user_id = user_info['id']
+    favorite = Favorite.query.filter_by(user_id=user_id, item_name=item_name).first()
+    if favorite:
+        db.session.delete(favorite)
+        db.session.commit()
+        return jsonify({'status': 'Favorite removed successfully', 'success': True}), 200
+    else:
+        return jsonify({'error': 'Item not in favorites', 'success': False}), 400
 
 @app.route('/image')
 def get_image():
@@ -232,43 +251,6 @@ def load_data_from_file():
         with open(JSON_FILE_PATH, 'r') as file:
             return json.load(file)
     return []
-
-def load_favorites_for_user(user_id):
-    if os.path.exists(FAVORITES_FILE_PATH):
-        with open(FAVORITES_FILE_PATH, 'r') as file:
-            favorites_data = json.load(file)
-            return favorites_data.get(str(user_id), [])
-    return []
-
-def save_favorites_for_user(user_id, favorites):
-    if os.path.exists(FAVORITES_FILE_PATH):
-        with open(FAVORITES_FILE_PATH, 'r') as file:
-            favorites_data = json.load(file)
-    else:
-        favorites_data = {}
-
-    favorites_data[str(user_id)] = favorites
-
-    with open(FAVORITES_FILE_PATH, 'w') as file:
-        json.dump(favorites_data, file, indent=4)
-
-def add_to_favorites(user_id, item_name):
-    favorites = load_favorites_for_user(user_id)
-    if item_name not in favorites:
-        favorites.append(item_name)
-        print(f"Favorites after adding: {favorites}")
-        save_favorites_for_user(user_id, favorites)
-    else:
-        print(f"Item '{item_name}' is already in favorites.")
-
-def remove_from_favorites(user_id, item_name):
-    favorites = load_favorites_for_user(user_id)
-    if item_name in favorites:
-        favorites.remove(item_name)
-        print(f"Favorites after removing: {favorites}")
-        save_favorites_for_user(user_id, favorites)
-    else:
-        print(f"Item '{item_name}' is not in favorites.")
 
 def update_local_data():
     codex_api_url = 'https://d4api.dev/api/codex'
@@ -341,4 +323,7 @@ def get_uniques():
     return uniques
 
 if __name__ == '__main__':
+    with app.app_context():
+        db.create_all()
+        print("Database and tables created.")
     app.run(debug=True)
