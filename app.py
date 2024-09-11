@@ -2,31 +2,28 @@ from flask import Flask, request, jsonify, redirect, url_for, session, render_te
 import requests
 import json
 import os
-import secrets
 import time
+import secrets
 
 app = Flask(__name__)
-app.secret_key = secrets.token_hex(16)  # Geração de uma chave secreta segura para a sessão
+app.secret_key = secrets.token_hex(16)
 
-# Caminhos para arquivos de dados
 JSON_FILE_PATH = 'uniques_data.json'
-FAVORITES_FILE_PATH = 'favorites.json'
 ITEMS_PER_PAGE = 6  # Ajuste conforme necessário
 PLACEHOLDER_IMAGE_URL = 'https://via.placeholder.com/200x200'
+FAVORITES_FILE_PATH = 'favorites.json'
 
-# Rota para logout
 @app.route('/logout', methods=['POST'])
 def logout():
     session.pop('user_info', None)
     return redirect(url_for('index'))
 
-# Rota para login com Battle.net
 @app.route('/login')
 def battle_net_login():
     state = secrets.token_urlsafe()
     session['oauth_state'] = state
     client_id = '61903ba666634e469e7b4977be4972f4'
-    redirect_uri = 'https://uniques-diablo4.vercel.app/callback'
+    redirect_uri = 'https://uniques-diablo4.vercel.app/callback'  # Substitua pela URL da sua aplicação Vercel
     scope = 'openid'
     auth_url = (
         f"https://battle.net/oauth/authorize?client_id={client_id}"
@@ -35,7 +32,6 @@ def battle_net_login():
     )
     return redirect(auth_url)
 
-# Rota de callback após autenticação
 @app.route('/callback')
 def callback():
     state = request.args.get('state')
@@ -58,35 +54,30 @@ def callback():
         'client_secret': client_secret
     }
 
-    # Obter o token de acesso
     response = requests.post(token_url, data=payload)
     if response.status_code != 200:
         return "Failed to obtain access token", 500
-
+    
     token_data = response.json()
     access_token = token_data.get('access_token')
     if not access_token:
         return "Access token not received", 500
-
-    # Obter informações do usuário
+    
     user_info_url = 'https://oauth.battle.net/userinfo'
     user_response = requests.get(user_info_url, headers={'Authorization': f'Bearer {access_token}'})
     if user_response.status_code != 200:
         return "Failed to get user information", 500
-
+    
     user_info = user_response.json()
     session['user_info'] = user_info
-    print("Sessão após o callback:", session)
     
     return redirect(url_for('index'))
 
-# Rota para atualizar dados locais
 @app.route('/update')
 def update():
     update_local_data()
     return jsonify({'status': 'Data updated successfully'}), 200
 
-# Rota para a página inicial
 @app.route('/')
 def index():
     uniques = get_uniques() or []
@@ -123,14 +114,13 @@ def index():
         favorites=favorites
     )
 
-# Rota para adicionar um item aos favoritos
 @app.route('/add_favorite', methods=['POST'])
 def add_favorite():
     data = request.json
     item_name = data.get('item_name')
     user_info = session.get('user_info')
-
-    print("Sessão na add_favorite:", session)
+    
+    print("Sessão do usuário na add_favorite:", session)
     print("Informações do usuário:", user_info)
 
     if not user_info:
@@ -143,32 +133,27 @@ def add_favorite():
     add_to_favorites(user_id, item_name)
     return jsonify({'status': 'Favorite added successfully', 'success': True}), 200
 
-# Rota para remover um item dos favoritos
 @app.route('/remove_favorite', methods=['POST'])
 def remove_favorite():
     data = request.json
     item_name = data.get('item_name')
     user_info = session.get('user_info')
-
-    print("Sessão na remove_favorite:", session)
-    print("Informações do usuário:", user_info)
-
+    print(user_info)
     if not user_info:
         return jsonify({'error': 'User not logged in', 'success': False}), 403
 
     if not item_name:
         return jsonify({'error': 'Item name is required', 'success': False}), 400
 
-    user_id = user_info.get('id')
+    user_id = user_info['id']
     remove_from_favorites(user_id, item_name)
     return jsonify({'status': 'Favorite removed successfully', 'success': True}), 200
 
-# Rota para obter a imagem do item
 @app.route('/image')
 def get_image():
     name = request.args.get('name', '').capitalize()
     uniques = get_uniques() or []
-
+    
     for unique in uniques:
         if unique['name'] == name:
             image_url = unique['image_url']
@@ -183,7 +168,6 @@ def get_image():
 
     return abort(404, description='Item não encontrado')
 
-# Rota para servir uma imagem de placeholder
 @app.route('/serve_placeholder')
 def serve_placeholder_image():
     try:
@@ -195,7 +179,6 @@ def serve_placeholder_image():
     except requests.RequestException:
         return abort(500, description='Erro ao obter a imagem de placeholder')
 
-# Rota para sugestões de busca
 @app.route('/search_suggestions')
 def search_suggestions():
     query = request.args.get('q', '').lower()
@@ -203,7 +186,68 @@ def search_suggestions():
     suggestions = [unique['name'] for unique in uniques if query in unique['name'].lower()]
     return jsonify(suggestions)
 
-# Função para atualizar dados locais
+def fetch_data_with_retry(url, retries=5, delay=1):
+    for i in range(retries):
+        try:
+            response = requests.get(url)
+            if response.status_code == 429:
+                time.sleep(delay)
+                delay *= 2
+                continue
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.RequestException as e:
+            print(f"RequestException: {e}")
+            break
+    return []
+
+def save_data_to_file(data):
+    with open(JSON_FILE_PATH, 'w') as file:
+        json.dump(data, file, indent=4)
+
+def load_data_from_file():
+    if os.path.exists(JSON_FILE_PATH):
+        with open(JSON_FILE_PATH, 'r') as file:
+            return json.load(file)
+    return []
+
+def load_favorites_for_user(user_id):
+    if os.path.exists(FAVORITES_FILE_PATH):
+        with open(FAVORITES_FILE_PATH, 'r') as file:
+            favorites_data = json.load(file)
+            return favorites_data.get(str(user_id), [])
+    return []
+
+def save_favorites_for_user(user_id, favorites):
+    if os.path.exists(FAVORITES_FILE_PATH):
+        with open(FAVORITES_FILE_PATH, 'r') as file:
+            favorites_data = json.load(file)
+    else:
+        favorites_data = {}
+
+    favorites_data[str(user_id)] = favorites
+
+    with open(FAVORITES_FILE_PATH, 'w') as file:
+        json.dump(favorites_data, file, indent=4)
+
+def add_to_favorites(user_id, item_name):
+    favorites = load_favorites_for_user(user_id)
+    if item_name not in favorites:
+        favorites.append(item_name)
+        print(f"Favorites after adding: {favorites}")
+        save_favorites_for_user(user_id, favorites)
+    else:
+        print(f"Item '{item_name}' is already in favorites.")
+
+def remove_from_favorites(user_id, item_name):
+    favorites = load_favorites_for_user(user_id)
+    if item_name in favorites:
+        favorites.remove(item_name)
+        print(f"Favorites after removing: {favorites}")
+        save_favorites_for_user(user_id, favorites)
+    else:
+        print(f"Item '{item_name}' is not in favorites.")
+
 def update_local_data():
     codex_api_url = 'https://d4api.dev/api/codex'
     codex_data = fetch_data_with_retry(codex_api_url)
@@ -226,6 +270,7 @@ def update_local_data():
     existing_labels = {item.get('label', '').lower() for item in existing_data}
 
     updated_data = []
+
     for item in codex_data:
         if item.get('type') == 'Unique':
             label = item.get('label', '').lower()
@@ -258,72 +303,20 @@ def update_local_data():
 
     save_data_to_file(updated_data)
 
-# Função para salvar dados no arquivo
-def save_data_to_file(data):
-    with open(JSON_FILE_PATH, 'w') as f:
-        json.dump(data, f, indent=4)
-
-# Função para carregar dados do arquivo
-def load_data_from_file():
-    try:
-        with open(JSON_FILE_PATH, 'r') as f:
-            return json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError):
-        return []
-
-# Função para buscar dados com retry
-def fetch_data_with_retry(url, retries=3, delay=2):
-    for attempt in range(retries):
-        try:
-            response = requests.get(url)
-            response.raise_for_status()
-            return response.json()
-        except requests.RequestException as e:
-            if attempt < retries - 1:
-                time.sleep(delay)
-            else:
-                print(f"Failed to fetch data from {url} after {retries} attempts.")
-                raise e
-
-# Função para carregar favoritos do usuário
-def load_favorites_for_user(user_id):
-    try:
-        with open(FAVORITES_FILE_PATH, 'r') as f:
-            favorites_data = json.load(f)
-    except FileNotFoundError:
-        favorites_data = {}
-
-    return favorites_data.get(user_id, [])
-
-# Função para adicionar item aos favoritos
-def add_to_favorites(user_id, item_name):
-    favorites = load_favorites_for_user(user_id)
-    if item_name not in favorites:
-        favorites.append(item_name)
-        update_favorites(user_id, favorites)
-
-# Função para remover item dos favoritos
-def remove_from_favorites(user_id, item_name):
-    favorites = load_favorites_for_user(user_id)
-    if item_name in favorites:
-        favorites.remove(item_name)
-        update_favorites(user_id, favorites)
-
-# Função para atualizar o arquivo de favoritos
-def update_favorites(user_id, favorites):
-    try:
-        with open(FAVORITES_FILE_PATH, 'r') as f:
-            favorites_data = json.load(f)
-    except FileNotFoundError:
-        favorites_data = {}
-
-    favorites_data[user_id] = favorites
-    with open(FAVORITES_FILE_PATH, 'w') as f:
-        json.dump(favorites_data, f, indent=4)
-
-# Função para obter os únicos
 def get_uniques():
-    return load_data_from_file()
+    data = load_data_from_file()
+    uniques = [
+        {
+            'name': item.get('label', 'Nome não disponível').capitalize(),
+            'type': item.get('type', 'Tipo não disponível').capitalize(),
+            'class': item.get('class', 'Classe não disponível').capitalize(),
+            'power': item.get('description', 'Poder não disponível'),
+            'image_url': item.get('image_url', 'https://via.placeholder.com/200x200')
+        }
+        for item in data
+        if item.get('type') in ['Mythic', 'Unique']
+    ]
+    return uniques
 
 if __name__ == '__main__':
     app.run(debug=True)
