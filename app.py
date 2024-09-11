@@ -130,19 +130,12 @@ def index():
 
     all_classes = sorted(set(unique['class'] for unique in uniques if unique['class'] and unique['class'] != 'Classe não disponível'))
 
-    # Busque as informações do usuário no banco de dados, se o ID estiver presente na sessão
     user_info = session.get('user_info')
+    print(user_info)
     if user_info:
-        user_id = user_info.get('id')
-        if user_id:
-            user = User.query.get(user_id)
-            if user:
-                favorites = Favorite.query.filter_by(user_id=user_id).all()
-                favorites = [fav.item_name for fav in favorites]
-            else:
-                favorites = []
-        else:
-            favorites = []
+        user_id = user_info['id']
+        favorites = Favorite.query.filter_by(user_id=user_id).all()
+        favorites = [fav.item_name for fav in favorites]
     else:
         favorites = []
 
