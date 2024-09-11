@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify, redirect, url_for, session, rende
 import requests
 from .models import db, User, Favorite
 from .utils import fetch_data_with_retry, save_data_to_file, load_data_from_file
+from .config import Config
 
 bp = Blueprint('main', __name__)
 
@@ -22,8 +23,8 @@ def battle_net_login():
     state = secrets.token_urlsafe()
     session['oauth_state'] = state
     auth_url = (
-        f"https://battle.net/oauth/authorize?client_id={app.config['BATTLE_NET_CLIENT_ID']}"
-        f"&redirect_uri={app.config['BASE_URL']}/callback&response_type=code"
+        f"https://battle.net/oauth/authorize?client_id={Config.BATTLE_NET_CLIENT_ID}"
+        f"&redirect_uri={Config.BASE_URL}/callback&response_type=code"
         f"&scope=openid&state={state}"
     )
     return redirect(auth_url)
@@ -41,18 +42,18 @@ def callback():
     payload = {
         'grant_type': 'authorization_code',
         'code': code,
-        'redirect_uri': f"{app.config['BASE_URL']}/callback",
-        'client_id': app.config['BATTLE_NET_CLIENT_ID'],
-        'client_secret': app.config['BATTLE_NET_CLIENT_SECRET']
+        'redirect_uri': f"{Config.BASE_URL}/callback",
+        'client_id': Config.BATTLE_NET_CLIENT_ID,
+        'client_secret': Config.BATTLE_NET_CLIENT_SECRET
     }
 
     try:
-        response = requests.post(app.config['OAUTH_TOKEN_URL'], data=payload)
+        response = requests.post(Config.OAUTH_TOKEN_URL, data=payload)
         response.raise_for_status()
         token_data = response.json()
         access_token = token_data.get('access_token')
 
-        user_info_response = requests.get(app.config['OAUTH_USERINFO_URL'], headers={'Authorization': f'Bearer {access_token}'})
+        user_info_response = requests.get(Config.OAUTH_USERINFO_URL, headers={'Authorization': f'Bearer {access_token}'})
         user_info_response.raise_for_status()
         user_info = user_info_response.json()
     except requests.RequestException:
@@ -85,9 +86,9 @@ def index():
     ]
 
     total_items = len(filtered_uniques)
-    total_pages = (total_items + app.config['ITEMS_PER_PAGE'] - 1) // app.config['ITEMS_PER_PAGE']
-    start = (page - 1) * app.config['ITEMS_PER_PAGE']
-    end = start + app.config['ITEMS_PER_PAGE']
+    total_pages = (total_items + Config.ITEMS_PER_PAGE - 1) // Config.ITEMS_PER_PAGE
+    start = (page - 1) * Config.ITEMS_PER_PAGE
+    end = start + Config.ITEMS_PER_PAGE
     paginated_uniques = filtered_uniques[start:end]
 
     all_classes = sorted(set(unique['class'] for unique in uniques if unique['class'] and unique['class'] != 'Classe não disponível'))
@@ -183,7 +184,7 @@ def search_suggestions():
 
 def serve_placeholder_image():
     try:
-        response = requests.get(app.config['PLACEHOLDER_IMAGE_URL'], stream=True)
+        response = requests.get(Config.PLACEHOLDER_IMAGE_URL, stream=True)
         if response.status_code == 200:
             return Response(response.content, mimetype=response.headers['Content-Type'])
         else:
@@ -192,8 +193,8 @@ def serve_placeholder_image():
         return abort(500, description='Erro ao obter a imagem de placeholder')
 
 def update_local_data():
-    codex_data = fetch_data_with_retry(app.config['CODDEX_API_URL'])
-    uniques_data = fetch_data_with_retry(app.config['UNIQUES_API_URL'])
+    codex_data = fetch_data_with_retry(Config.CODDEX_API_URL)
+    uniques_data = fetch_data_with_retry(Config.UNIQUES_API_URL)
 
     codex_name_to_item = {}
     if codex_data:
@@ -202,7 +203,7 @@ def update_local_data():
             codex_name_to_item[item.get('label', '').lower()] = {
                 'class': item.get('class', 'Generic'),
                 'description': item.get('description', 'Descrição não disponível'),
-                'image_url': item.get('image_url', app.config['PLACEHOLDER_IMAGE_URL']),
+                'image_url': item.get('image_url', Config.PLACEHOLDER_IMAGE_URL),
                 'type': item_type
             }
 
@@ -215,7 +216,7 @@ def update_local_data():
         if item.get('type') == 'Unique':
             label = item.get('label', '').lower()
             if label in codex_name_to_item:
-                codex_name_to_item[label]['image_url'] = item.get('image_url', app.config['PLACEHOLDER_IMAGE_URL'])
+                codex_name_to_item[label]['image_url'] = item.get('image_url', Config.PLACEHOLDER_IMAGE_URL)
                 updated_data.append({
                     'type': codex_name_to_item[label]['type'],
                     'label': item.get('label', ''),
@@ -233,12 +234,12 @@ def update_local_data():
                 'label': item.get('name', ''),
                 'class': item.get('class', 'Generic'),
                 'description': item.get('description', 'Descrição não informada.'),
-                'image_url': item.get('image_url', app.config['PLACEHOLDER_IMAGE_URL'])
+                'image_url': item.get('image_url', Config.PLACEHOLDER_IMAGE_URL)
             })
         else:
             for updated_item in updated_data:
                 if updated_item.get('label', '').lower() == label:
-                    updated_item['image_url'] = item.get('image_url', app.config['PLACEHOLDER_IMAGE_URL'])
+                    updated_item['image_url'] = item.get('image_url', Config.PLACEHOLDER_IMAGE_URL)
                     updated_item['type'] = item_type
 
     save_data_to_file(updated_data)
@@ -251,7 +252,7 @@ def get_uniques():
             'type': item.get('type', 'Tipo não disponível').capitalize(),
             'class': item.get('class', 'Classe não disponível').capitalize(),
             'power': item.get('description', 'Poder não disponível'),
-            'image_url': item.get('image_url', app.config['PLACEHOLDER_IMAGE_URL'])
+            'image_url': item.get('image_url', Config.PLACEHOLDER_IMAGE_URL)
         }
         for item in data
         if item.get('type') in ['Mythic', 'Unique']
