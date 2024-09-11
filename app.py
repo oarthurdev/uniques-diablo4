@@ -58,6 +58,9 @@ def battle_net_login():
 @app.route('/callback')
 def callback():
     state = request.args.get('state')
+    print("State: ", state)
+    print("Callback state", session.get('oauth_state'))
+    
     if state != session.get('oauth_state'):
         return "State parameter mismatch", 400
 
