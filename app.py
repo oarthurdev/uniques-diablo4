@@ -13,6 +13,13 @@ ITEMS_PER_PAGE = 6  # Ajuste conforme necessário
 PLACEHOLDER_IMAGE_URL = 'https://via.placeholder.com/200x200'
 FAVORITES_FILE_PATH = 'favorites.json'
 
+@app.after_request
+def add_header(response):
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+    return response
+
 @app.route('/logout', methods=['POST'])
 def logout():
     session.pop('user_info', None)
