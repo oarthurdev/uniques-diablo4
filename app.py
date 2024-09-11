@@ -92,22 +92,16 @@ def callback():
         return "Failed to get user information", 500
     
     user_info = user_response.json()
-    session['user_info'] = user_info
+    user_id = user_info.get('id')
 
     # Store user info in the database
-    user_id = user_info.get('id')
     existing_user = User.query.get(user_id)
     if not existing_user:
         new_user = User(id=user_id, data=user_info)
         db.session.add(new_user)
         db.session.commit()
 
-    return redirect(url_for('index'))
-
-@app.route('/update')
-def update():
-    update_local_data()
-    return jsonify({'status': 'Data updated successfully'}), 200
+    return redirect(url_for('index', user_id=user_id))
 
 @app.route('/')
 def index():
@@ -130,10 +124,8 @@ def index():
 
     all_classes = sorted(set(unique['class'] for unique in uniques if unique['class'] and unique['class'] != 'Classe não disponível'))
 
-    user_info = session.get('user_info')
-    print(user_info)
-    if user_info:
-        user_id = user_info['id']
+    user_id = request.args.get('user_id')
+    if user_id:
         favorites = Favorite.query.filter_by(user_id=user_id).all()
         favorites = [fav.item_name for fav in favorites]
     else:
@@ -147,7 +139,6 @@ def index():
         filter_name=filter_name,
         page=page,
         total_pages=total_pages,
-        user_info=user_info,
         favorites=favorites
     )
 
@@ -155,15 +146,14 @@ def index():
 def add_favorite():
     data = request.json
     item_name = data.get('item_name')
-    user_info = session.get('user_info')
+    user_id = request.json.get('user_id')
 
-    if not user_info:
-        return jsonify({'error': 'User not logged in', 'success': False}), 403
+    if not user_id:
+        return jsonify({'error': 'User ID is required', 'success': False}), 403
 
     if not item_name:
         return jsonify({'error': 'Item name is required', 'success': False}), 400
 
-    user_id = user_info.get('id')
     existing_favorite = Favorite.query.filter_by(user_id=user_id, item_name=item_name).first()
     if not existing_favorite:
         new_favorite = Favorite(user_id=user_id, item_name=item_name)
@@ -176,21 +166,25 @@ def add_favorite():
 def remove_favorite():
     data = request.json
     item_name = data.get('item_name')
-    user_info = session.get('user_info')
+    user_id = request.json.get('user_id')
 
-    if not user_info:
-        return jsonify({'error': 'User not logged in', 'success': False}), 403
+    if not user_id:
+        return jsonify({'error': 'User ID is required', 'success': False}), 403
 
     if not item_name:
         return jsonify({'error': 'Item name is required', 'success': False}), 400
 
-    user_id = user_info['id']
     existing_favorite = Favorite.query.filter_by(user_id=user_id, item_name=item_name).first()
     if existing_favorite:
         db.session.delete(existing_favorite)
         db.session.commit()
 
     return jsonify({'status': 'Favorite removed successfully', 'success': True}), 200
+
+@app.route('/update')
+def update():
+    update_local_data()
+    return jsonify({'status': 'Data updated successfully'}), 200
 
 @app.route('/image')
 def get_image():
