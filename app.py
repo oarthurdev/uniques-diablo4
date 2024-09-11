@@ -73,6 +73,7 @@ def callback():
     user_info = user_response.json()
     session['user_info'] = user_info
     
+    print(session)
     # Redirecionar para a página inicial
     return redirect(url_for('index'))
 
