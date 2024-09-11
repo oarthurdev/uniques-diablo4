@@ -8,7 +8,7 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import timedelta
 
 app = Flask(__name__)
-app.secret_key = secrets.token_hex(16)
+app.secret_key = secrets.token_hex(16)  # Em produção, use variáveis de ambiente
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://uniques-d4_owner:6oKHsYply1ZB@ep-aged-brook-a509z7ni.us-east-2.aws.neon.tech/uniques-d4?sslmode=require'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.permanent_session_lifetime = timedelta(minutes=30)
@@ -25,7 +25,7 @@ class Favorite(db.Model):
     user = db.relationship('User', backref='favorites')
 
 JSON_FILE_PATH = 'uniques_data.json'
-ITEMS_PER_PAGE = 6  # Ajuste conforme necessário
+ITEMS_PER_PAGE = 6
 PLACEHOLDER_IMAGE_URL = 'https://via.placeholder.com/200x200'
 
 with app.app_context():
@@ -48,7 +48,7 @@ def battle_net_login():
     state = secrets.token_urlsafe()
     session['oauth_state'] = state
     client_id = '61903ba666634e469e7b4977be4972f4'
-    redirect_uri = 'https://uniques-diablo4.vercel.app/callback'  # Substitua pela URL da sua aplicação Vercel
+    redirect_uri = 'https://uniques-diablo4.vercel.app/callback'  # Atualize conforme necessário
     scope = 'openid'
     auth_url = (
         f"https://battle.net/oauth/authorize?client_id={client_id}"
@@ -60,9 +60,6 @@ def battle_net_login():
 @app.route('/callback')
 def callback():
     state = request.args.get('state')
-    print("State: ", state)
-    print("Callback state", session.get('oauth_state'))
-
     if state != session.get('oauth_state'):
         return "State parameter mismatch", 400
 
@@ -82,26 +79,22 @@ def callback():
         'client_secret': client_secret
     }
 
-    response = requests.post(token_url, data=payload)
-    if response.status_code != 200:
-        return "Failed to obtain access token", 500
-    
-    token_data = response.json()
-    access_token = token_data.get('access_token')
-    if not access_token:
-        return "Access token not received", 500
-    
-    user_info_url = 'https://oauth.battle.net/userinfo'
-    user_response = requests.get(user_info_url, headers={'Authorization': f'Bearer {access_token}'})
-    if user_response.status_code != 200:
-        return "Failed to get user information", 500
-    
-    user_info = user_response.json()
-    session['user_info'] = user_info
+    try:
+        response = requests.post(token_url, data=payload)
+        response.raise_for_status()
+        token_data = response.json()
+        access_token = token_data.get('access_token')
+        
+        user_info_url = 'https://oauth.battle.net/userinfo'
+        user_response = requests.get(user_info_url, headers={'Authorization': f'Bearer {access_token}'})
+        user_response.raise_for_status()
+        user_info = user_response.json()
+    except requests.RequestException:
+        return "Failed to obtain user information", 500
 
+    session['user_info'] = user_info
     session.permanent = True
 
-    # Store user info in the database
     user_id = user_info.get('id')
     existing_user = User.query.get(user_id)
 
@@ -248,7 +241,7 @@ def fetch_data_with_retry(url, retries=5, delay=1):
             return response.json()
         except requests.exceptions.RequestException as e:
             print(f"RequestException: {e}")
-            break
+            time.sleep(delay)
     return []
 
 def save_data_to_file(data):
