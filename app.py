@@ -99,6 +99,8 @@ def callback():
     user_info = user_response.json()
     session['user_info'] = user_info
 
+    session.permanent = True
+
     # Store user info in the database
     user_id = user_info.get('id')
     existing_user = User.query.get(user_id)
