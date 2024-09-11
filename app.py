@@ -5,11 +5,13 @@ import os
 import time
 import secrets
 from flask_sqlalchemy import SQLAlchemy
+from datetime import timedelta
 
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(16)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://uniques-d4_owner:6oKHsYply1ZB@ep-aged-brook-a509z7ni.us-east-2.aws.neon.tech/uniques-d4?sslmode=require'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.permanent_session_lifetime = timedelta(minutes=30)
 
 db = SQLAlchemy(app)
 
@@ -60,7 +62,7 @@ def callback():
     state = request.args.get('state')
     print("State: ", state)
     print("Callback state", session.get('oauth_state'))
-    
+
     if state != session.get('oauth_state'):
         return "State parameter mismatch", 400
 
