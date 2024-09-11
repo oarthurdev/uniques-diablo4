@@ -4,23 +4,14 @@ import json
 import os
 import time
 import secrets
-from flask_debugtoolbar import DebugToolbarExtension
 
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(16)
-
-app.config['DEBUG_TB_PANELS'] = ['flask_debugtoolbar.panels.cache.CachePanel']
 
 JSON_FILE_PATH = 'uniques_data.json'
 ITEMS_PER_PAGE = 6  # Ajuste conforme necessário
 PLACEHOLDER_IMAGE_URL = 'https://via.placeholder.com/200x200'
 FAVORITES_FILE_PATH = 'favorites.json'
-
-app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
-app.config['DEBUG_TB_PANELS'] = ['flask_debugtoolbar.panels.cache.CachePanel']
-app.config['DEBUG_TB_ENABLED'] = True  # Habilitar apenas em desenvolvimento
-
-toolbar = DebugToolbarExtension(app)
 
 @app.after_request
 def add_header(response):
@@ -28,7 +19,7 @@ def add_header(response):
     response.headers['Pragma'] = 'no-cache'
     response.headers['Expires'] = '0'
     return response
-
+    
 @app.route('/logout', methods=['POST'])
 def logout():
     session.pop('user_info', None)
@@ -87,7 +78,7 @@ def callback():
     user_info = user_response.json()
     session['user_info'] = user_info
     
-    return redirect(url_for('index'))
+    return session
 
 @app.route('/update')
 def update():
