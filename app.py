@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify, redirect, url_for, session, render_template, Response, abort
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 import requests
 import json
 import os
@@ -7,12 +8,9 @@ import secrets
 
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(16)
+app.config['JWT_SECRET_KEY'] = secrets.token_hex(16)  # Alterar para sua chave secreta
 
-app.config.update(
-    SESSION_COOKIE_SECURE=True,  # Apenas envia cookies em conexões HTTPS
-    SESSION_COOKIE_HTTPONLY=True, # Impede o acesso aos cookies via JavaScript
-    SESSION_COOKIE_SAMESITE='Lax', # Protege contra ataques CSRF
-)
+jwt = JWTManager(app)
 
 JSON_FILE_PATH = 'uniques_data.json'
 ITEMS_PER_PAGE = 6  # Ajuste conforme necessário
@@ -25,18 +23,13 @@ def add_header(response):
     response.headers['Pragma'] = 'no-cache'
     response.headers['Expires'] = '0'
     return response
-    
-@app.route('/logout', methods=['POST'])
-def logout():
-    session.pop('user_info', None)
-    return redirect(url_for('index'))
 
 @app.route('/login')
 def battle_net_login():
     state = secrets.token_urlsafe()
     session['oauth_state'] = state
     client_id = '61903ba666634e469e7b4977be4972f4'
-    redirect_uri = 'https://uniques-diablo4.vercel.app/callback'  # Substitua pela URL da sua aplicação Vercel
+    redirect_uri = 'https://uniques-diablo4.vercel.app/callback'
     scope = 'openid'
     auth_url = (
         f"https://battle.net/oauth/authorize?client_id={client_id}"
@@ -82,16 +75,18 @@ def callback():
         return "Failed to get user information", 500
     
     user_info = user_response.json()
-    session['user_info'] = user_info
     
-    return redirect(url_for('index'))
+    # Cria um JWT para o usuário
+    access_token = create_access_token(identity=user_info)
+    
+    # Redireciona o usuário para a página inicial com o token JWT
+    return redirect(url_for('index', _external=True, _scheme='https'))
 
 @app.route('/update')
 def update():
     update_local_data()
     return jsonify({'status': 'Data updated successfully'}), 200
 
-@app.route('/')
 @app.route('/')
 def index():
     uniques = get_uniques() or []
@@ -133,38 +128,38 @@ def index():
         favorites=favorites
     )
 
+@app.route('/logout', methods=['POST'])
+@jwt_required()
+def logout():
+    return jsonify({'msg': 'Logout successful'}), 200
+
 @app.route('/add_favorite', methods=['POST'])
+@jwt_required()
 def add_favorite():
     data = request.json
     item_name = data.get('item_name')
-    user_info = session.get('user_info')
     
-    print("Sessão do usuário na add_favorite:", session)
-    print("Informações do usuário:", user_info)
-
-    if not user_info:
-        return jsonify({'error': 'User not logged in', 'success': False}), 403
-
+    current_user = get_jwt_identity()
+    user_id = current_user.get('id')
+    
     if not item_name:
         return jsonify({'error': 'Item name is required', 'success': False}), 400
 
-    user_id = user_info.get('id')
     add_to_favorites(user_id, item_name)
     return jsonify({'status': 'Favorite added successfully', 'success': True}), 200
 
 @app.route('/remove_favorite', methods=['POST'])
+@jwt_required()
 def remove_favorite():
     data = request.json
     item_name = data.get('item_name')
-    user_info = session.get('user_info')
-    print(user_info)
-    if not user_info:
-        return jsonify({'error': 'User not logged in', 'success': False}), 403
-
+    
+    current_user = get_jwt_identity()
+    user_id = current_user.get('id')
+    
     if not item_name:
         return jsonify({'error': 'Item name is required', 'success': False}), 400
 
-    user_id = user_info['id']
     remove_from_favorites(user_id, item_name)
     return jsonify({'status': 'Favorite removed successfully', 'success': True}), 200
 
