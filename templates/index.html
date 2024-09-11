@@ -267,6 +267,7 @@
             // Decodifique o JSON
             allItems = JSON.parse(jsonString);
 
+            console.log(allItems)
             // Verifique se allItems é um array
             if (!Array.isArray(allItems)) {
                 throw new Error('Os dados JSON não são um array.');
@@ -275,23 +276,23 @@
             // Renderize os itens
             const container = document.getElementById('uniquesContainer');
             container.innerHTML = allItems.map(item => `
-                <div class="col-md-4 mb-4 item" data-name="${item.name.toLowerCase()}" data-class="${item.class.toLowerCase()}">
+                <div class="col-md-4 mb-4 item" data-name="${item.label.toLowerCase()}" data-class="${item.class.toLowerCase()}">
                     <div class="card">
                         <div class="image-container ${item.type === 'Mythic' ? 'mythic' : ''}" 
                             data-toggle="modal" 
                             data-target="#imageModal" 
                             data-image-url="${item.image_url}" 
-                            data-item-name="${item.name}">
-                            <img src="https://uniques-diablo4.vercel.app/image?name=${item.name}" alt="${item.name}">
+                            data-item-name="${item.label}">
+                            <img src="https://uniques-diablo4.vercel.app/image?name=${item.label}" alt="${item.label}">
                         </div>
                         <div class="card-body">
-                            <h5 class="card-title">${item.name}</h5>
+                            <h5 class="card-title">${item.label}</h5>
                             <p class="card-text">Type: ${item.type}</p>
                             <p class="card-text">Classe: ${item.class}</p>
                             <p class="card-text">Poder: ${item.power}</p>
                             <button class="btn btn-outline-primary favorite-btn" 
-                                    data-item-name="${item.name}">
-                                ${favorites.has(item.name.toLowerCase()) ? '⭐ Favorito' : '☆ Adicionar aos Favoritos'}
+                                    data-item-name="${item.label}">
+                                ${favorites.has(item.label.toLowerCase()) ? '⭐ Favorito' : '☆ Adicionar aos Favoritos'}
                             </button>
                         </div>
                     </div>
