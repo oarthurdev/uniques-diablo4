@@ -111,6 +111,7 @@ def index():
     user_info = session.get('user_info')
     favorites = load_favorites_for_user(user_info['id']) if user_info else []
 
+    print(paginated_uniques)
     return render_template(
         'index.html',
         uniques=paginated_uniques,
