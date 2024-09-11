@@ -88,35 +88,41 @@ def update():
     update_local_data()
     return jsonify({'status': 'Data updated successfully'}), 200
 
+from flask_jwt_extended import jwt_required, get_jwt_identity
+
 @app.route('/')
+@jwt_required()
 def index():
+    # Obtém as informações do usuário a partir do JWT
+    user_info = get_jwt_identity()
+    user_id = user_info.get('id') if user_info else None
+
+    # Carrega os dados dos únicos (uniques)
     uniques = get_uniques() or []
     filter_class = request.args.get('class', '')
     filter_name = request.args.get('name', '').lower()
     page = int(request.args.get('page', 1))
 
+    # Filtra os dados
     filtered_uniques = [
         unique for unique in uniques
         if (not filter_class or unique['class'].lower() == filter_class.lower()) and 
         (not filter_name or filter_name in unique['name'].lower())
     ]
 
+    # Paginação
     total_items = len(filtered_uniques)
     total_pages = (total_items + ITEMS_PER_PAGE - 1) // ITEMS_PER_PAGE
     start = (page - 1) * ITEMS_PER_PAGE
     end = start + ITEMS_PER_PAGE
     paginated_uniques = filtered_uniques[start:end]
 
+    # Obtém todas as classes disponíveis
     all_classes = sorted(set(unique['class'] for unique in uniques if unique['class'] and unique['class'] != 'Classe não disponível'))
 
-    user_info = session.get('user_info')
-    if user_info:
-        user_id = user_info.get('id')
-        favorites = load_favorites_for_user(user_id) if user_id else []
-    else:
-        favorites = []
+    # Carrega favoritos do usuário
+    favorites = load_favorites_for_user(user_id) if user_id else []
 
-    print("User info in index:", user_info)
     return render_template(
         'index.html',
         uniques=paginated_uniques,
@@ -128,6 +134,7 @@ def index():
         user_info=user_info,
         favorites=favorites
     )
+
 
 @app.route('/logout', methods=['POST'])
 @jwt_required()
