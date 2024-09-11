@@ -1,5 +1,4 @@
 from flask import Flask, request, jsonify, redirect, url_for, session, render_template, Response, abort
-from flask_sqlalchemy import SQLAlchemy
 import requests
 import json
 import os
@@ -8,25 +7,11 @@ import secrets
 
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(16)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-db = SQLAlchemy(app)
-
-# Model for storing user sessions
-class User(db.Model):
-    id = db.Column(db.String, primary_key=True)
-    data = db.Column(db.JSON)
-
-# Model for storing user favorites
-class Favorite(db.Model):
-    user_id = db.Column(db.String, db.ForeignKey('user.id'), primary_key=True)
-    item_name = db.Column(db.String, primary_key=True)
-    user = db.relationship('User', backref='favorites')
 
 JSON_FILE_PATH = 'uniques_data.json'
-ITEMS_PER_PAGE = 6  # Adjust as necessary
+ITEMS_PER_PAGE = 6  # Ajuste conforme necessário
 PLACEHOLDER_IMAGE_URL = 'https://via.placeholder.com/200x200'
+FAVORITES_FILE_PATH = 'favorites.json'
 
 @app.after_request
 def add_header(response):
@@ -34,7 +19,7 @@ def add_header(response):
     response.headers['Pragma'] = 'no-cache'
     response.headers['Expires'] = '0'
     return response
-
+    
 @app.route('/logout', methods=['POST'])
 def logout():
     session.pop('user_info', None)
@@ -45,7 +30,7 @@ def battle_net_login():
     state = secrets.token_urlsafe()
     session['oauth_state'] = state
     client_id = '61903ba666634e469e7b4977be4972f4'
-    redirect_uri = 'https://uniques-diablo4.vercel.app/callback'
+    redirect_uri = 'https://uniques-diablo4.vercel.app/callback'  # Substitua pela URL da sua aplicação Vercel
     scope = 'openid'
     auth_url = (
         f"https://battle.net/oauth/authorize?client_id={client_id}"
@@ -93,15 +78,6 @@ def callback():
     user_info = user_response.json()
     session['user_info'] = user_info
     
-    user = User.query.get(user_info['id'])
-    if not user:
-        user = User(id=user_info['id'], data=user_info)
-        db.session.add(user)
-        db.session.commit()
-    else:
-        user.data = user_info
-        db.session.commit()
-    
     return redirect(url_for('index'))
 
 @app.route('/update')
@@ -131,10 +107,7 @@ def index():
     all_classes = sorted(set(unique['class'] for unique in uniques if unique['class'] and unique['class'] != 'Classe não disponível'))
 
     user_info = session.get('user_info')
-    if user_info:
-        favorites = [fav.item_name for fav in Favorite.query.filter_by(user_id=user_info['id']).all()]
-    else:
-        favorites = []
+    favorites = load_favorites_for_user(user_info['id']) if user_info else []
 
     return render_template(
         'index.html',
@@ -154,6 +127,9 @@ def add_favorite():
     item_name = data.get('item_name')
     user_info = session.get('user_info')
     
+    print("Sessão do usuário na add_favorite:", session)
+    print("Informações do usuário:", user_info)
+
     if not user_info:
         return jsonify({'error': 'User not logged in', 'success': False}), 403
 
@@ -161,20 +137,15 @@ def add_favorite():
         return jsonify({'error': 'Item name is required', 'success': False}), 400
 
     user_id = user_info.get('id')
-    if not Favorite.query.filter_by(user_id=user_id, item_name=item_name).first():
-        favorite = Favorite(user_id=user_id, item_name=item_name)
-        db.session.add(favorite)
-        db.session.commit()
-        return jsonify({'status': 'Favorite added successfully', 'success': True}), 200
-    else:
-        return jsonify({'error': 'Item already in favorites', 'success': False}), 400
+    add_to_favorites(user_id, item_name)
+    return jsonify({'status': 'Favorite added successfully', 'success': True}), 200
 
 @app.route('/remove_favorite', methods=['POST'])
 def remove_favorite():
     data = request.json
     item_name = data.get('item_name')
     user_info = session.get('user_info')
-    
+    print(user_info)
     if not user_info:
         return jsonify({'error': 'User not logged in', 'success': False}), 403
 
@@ -182,13 +153,8 @@ def remove_favorite():
         return jsonify({'error': 'Item name is required', 'success': False}), 400
 
     user_id = user_info['id']
-    favorite = Favorite.query.filter_by(user_id=user_id, item_name=item_name).first()
-    if favorite:
-        db.session.delete(favorite)
-        db.session.commit()
-        return jsonify({'status': 'Favorite removed successfully', 'success': True}), 200
-    else:
-        return jsonify({'error': 'Item not in favorites', 'success': False}), 400
+    remove_from_favorites(user_id, item_name)
+    return jsonify({'status': 'Favorite removed successfully', 'success': True}), 200
 
 @app.route('/image')
 def get_image():
@@ -251,6 +217,43 @@ def load_data_from_file():
         with open(JSON_FILE_PATH, 'r') as file:
             return json.load(file)
     return []
+
+def load_favorites_for_user(user_id):
+    if os.path.exists(FAVORITES_FILE_PATH):
+        with open(FAVORITES_FILE_PATH, 'r') as file:
+            favorites_data = json.load(file)
+            return favorites_data.get(str(user_id), [])
+    return []
+
+def save_favorites_for_user(user_id, favorites):
+    if os.path.exists(FAVORITES_FILE_PATH):
+        with open(FAVORITES_FILE_PATH, 'r') as file:
+            favorites_data = json.load(file)
+    else:
+        favorites_data = {}
+
+    favorites_data[str(user_id)] = favorites
+
+    with open(FAVORITES_FILE_PATH, 'w') as file:
+        json.dump(favorites_data, file, indent=4)
+
+def add_to_favorites(user_id, item_name):
+    favorites = load_favorites_for_user(user_id)
+    if item_name not in favorites:
+        favorites.append(item_name)
+        print(f"Favorites after adding: {favorites}")
+        save_favorites_for_user(user_id, favorites)
+    else:
+        print(f"Item '{item_name}' is already in favorites.")
+
+def remove_from_favorites(user_id, item_name):
+    favorites = load_favorites_for_user(user_id)
+    if item_name in favorites:
+        favorites.remove(item_name)
+        print(f"Favorites after removing: {favorites}")
+        save_favorites_for_user(user_id, favorites)
+    else:
+        print(f"Item '{item_name}' is not in favorites.")
 
 def update_local_data():
     codex_api_url = 'https://d4api.dev/api/codex'
@@ -323,7 +326,4 @@ def get_uniques():
     return uniques
 
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-        print("Database and tables created.")
     app.run(debug=True)
