@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify, redirect, url_for, session, render_template, Response, abort
 import requests
+import secrets
 from .models import db, User, Favorite
 from .utils import fetch_data_with_retry, save_data_to_file, load_data_from_file
 from .config import Config
