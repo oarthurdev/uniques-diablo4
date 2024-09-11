@@ -4,9 +4,19 @@ import json
 import os
 import time
 import secrets
+from flask_session import Session
 
 app = Flask(__name__)
-app.secret_key = secrets.token_hex(16)
+
+# Configuração da sessão
+app.config['SESSION_TYPE'] = 'filesystem'  # Pode ser 'redis', 'memcached', etc.
+app.config['SESSION_PERMANENT'] = False
+app.config['SESSION_USE_SIGNER'] = True
+app.config['SECRET_KEY'] = secrets.token_hex(16)
+app.config['SESSION_FILE_DIR'] = './flask_session'  # Diretório onde as sessões serão armazenadas
+
+# Inicialização da extensão Flask-Session
+Session(app)
 
 JSON_FILE_PATH = 'uniques_data.json'
 ITEMS_PER_PAGE = 6  # Ajuste conforme necessário
@@ -86,7 +96,7 @@ def update():
     return jsonify({'status': 'Data updated successfully'}), 200
 
 @app.route('/')
-@app.route('/')
+@app.route('/index')
 def index():
     uniques = get_uniques() or []
     filter_class = request.args.get('class', '')
