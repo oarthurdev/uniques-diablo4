@@ -85,6 +85,7 @@ def callback():
         token_data = response.json()
         access_token = token_data.get('access_token')
         
+        print(access_token)
         user_info_url = 'https://oauth.battle.net/userinfo'
         user_response = requests.get(user_info_url, headers={'Authorization': f'Bearer {access_token}'})
         user_response.raise_for_status()
