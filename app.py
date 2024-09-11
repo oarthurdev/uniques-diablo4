@@ -86,6 +86,7 @@ def update():
     return jsonify({'status': 'Data updated successfully'}), 200
 
 @app.route('/')
+@app.route('/')
 def index():
     uniques = get_uniques() or []
     filter_class = request.args.get('class', '')
@@ -107,9 +108,13 @@ def index():
     all_classes = sorted(set(unique['class'] for unique in uniques if unique['class'] and unique['class'] != 'Classe não disponível'))
 
     user_info = session.get('user_info')
-    favorites = load_favorites_for_user(user_info['id']) if user_info else []
+    if user_info:
+        user_id = user_info.get('id')
+        favorites = load_favorites_for_user(user_id) if user_id else []
+    else:
+        favorites = []
 
-    print(user_info)
+    print("User info in index:", user_info)
     return render_template(
         'index.html',
         uniques=paginated_uniques,
