@@ -117,6 +117,7 @@ def index():
     favorites = []
 
     user_identity = get_jwt_identity()
+    print(user_identity)
     if user_identity:
         user_id = user_identity.get('user_info', {}).get('id')
         if user_id:
