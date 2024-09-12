@@ -133,6 +133,7 @@ def index():
 
     # Use the user_id from the JWT token
     user_identity = get_jwt_identity()
+    print(user_identity)
     if user_identity:
         user_id = user_identity.get('user_info', {}).get('id')
         token = get_jwt_token_from_db(user_id)
