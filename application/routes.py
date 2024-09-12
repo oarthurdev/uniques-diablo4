@@ -131,20 +131,10 @@ def index():
     user_info = None
     favorites = []
 
-    # Use the user_id from the request args or a JWT token from the database
-    user_id = request.args.get('user_id')
-    if not user_id:
-        token = get_jwt_token_from_db()
-        if token:
-            try:
-                decoded_token = decode_token(token)
-                sub = decoded_token.get('sub')
-                if sub and 'user_info' in sub:
-                    user_id = sub['user_info']['id']
-            except Exception as e:
-                print(f"Error extracting user info: {e}")
-
-    if user_id:
+    # Use the user_id from the JWT token
+    user_identity = get_jwt_identity()
+    if user_identity:
+        user_id = user_identity.get('user_info', {}).get('id')
         token = get_jwt_token_from_db(user_id)
         if token:
             try:
@@ -173,13 +163,20 @@ def index():
 def add_favorite():
     data = request.json
     item_name = data.get('item_name')
-    token = get_jwt_token_from_db()
 
-    if token:
-        decoded_token = decode_token(token)
-        sub = decoded_token.get('sub')
-        user_id = sub['user_info']['id']
-        
+    user_identity = get_jwt_identity()
+    if user_identity:
+        user_id = user_identity.get('user_info', {}).get('id')
+        token = get_jwt_token_from_db(user_id)
+        if token:
+            try:
+                decoded_token = decode_token(token)
+                sub = decoded_token.get('sub')
+                user_id = sub['user_info']['id']
+            except Exception as e:
+                print(f"Error extracting user info: {e}")
+                return jsonify({'error': 'Failed to process user info', 'success': False}), 400
+
     if not item_name:
         return jsonify({'error': 'Item name is required', 'success': False}), 400
 
@@ -195,12 +192,19 @@ def add_favorite():
 def remove_favorite():
     data = request.json
     item_name = data.get('item_name')
-    token = get_jwt_token_from_db()
 
-    if token:
-        decoded_token = decode_token(token)
-        sub = decoded_token.get('sub')
-        user_id = sub['user_info']['id']
+    user_identity = get_jwt_identity()
+    if user_identity:
+        user_id = user_identity.get('user_info', {}).get('id')
+        token = get_jwt_token_from_db(user_id)
+        if token:
+            try:
+                decoded_token = decode_token(token)
+                sub = decoded_token.get('sub')
+                user_id = sub['user_info']['id']
+            except Exception as e:
+                print(f"Error extracting user info: {e}")
+                return jsonify({'error': 'Failed to process user info', 'success': False}), 400
 
     if not item_name:
         return jsonify({'error': 'Item name is required', 'success': False}), 400
