@@ -8,9 +8,6 @@ import secrets
 
 bp = Blueprint('main', __name__)
 
-with bp.app_context():
-    db.create_all()
-
 @bp.after_request
 def add_header(response):
     response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
