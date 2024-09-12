@@ -1,9 +1,10 @@
-from flask import Blueprint, request, jsonify, redirect, url_for, session, render_template, Response, abort
+from flask import Blueprint, request, jsonify, redirect, url_for, render_template, Response, abort
 import requests
-import secrets
-from .models import db, User, Favorite
+from flask_jwt_extended import create_access_token, decode_token, jwt_required, get_jwt_identity, unset_jwt_cookies, set_access_cookies
 from .utils import fetch_data_with_retry, save_data_to_file, load_data_from_file
+from .models import db, User, Favorite
 from .config import Config
+import secrets
 
 bp = Blueprint('main', __name__)
 
@@ -14,28 +15,44 @@ def add_header(response):
     response.headers['Expires'] = '0'
     return response
 
+@bp.route('/auth-status', methods=['GET'])
+@jwt_required(optional=True)
+def auth_status():
+    user_identity = get_jwt_identity()
+    
+    if user_identity is None:
+        return jsonify({'loggedIn': False}), 200
+    
+    user_id = user_identity.get('user_id')
+    user = User.query.get(user_id)
+    
+    if user:
+        return jsonify({
+            'loggedIn': True,
+            'battleTag': user.data.get('battleTag', 'Desconhecido')
+        }), 200
+    else:
+        return jsonify({'loggedIn': False}), 200
+
 @bp.route('/logout', methods=['POST'])
 def logout():
-    session.pop('user_info', None)
-    return redirect(url_for('main.index'))
+    # To log out, just delete the token on the client-side and unset cookies
+    response = jsonify({'status': 'Logged out successfully'})
+    unset_jwt_cookies(response)
+    return response, 200
 
 @bp.route('/login')
 def battle_net_login():
     state = secrets.token_urlsafe()
-    session['oauth_state'] = state
-    auth_url = (
+    return redirect(
         f"https://battle.net/oauth/authorize?client_id={Config.BATTLE_NET_CLIENT_ID}"
         f"&redirect_uri={Config.BASE_URL}/callback&response_type=code"
         f"&scope=openid&state={state}"
     )
-    return redirect(auth_url)
 
 @bp.route('/callback')
 def callback():
     state = request.args.get('state')
-    if state != session.get('oauth_state'):
-        return "State parameter mismatch", 400
-
     code = request.args.get('code')
     if not code:
         return "Authorization code missing", 400
@@ -49,19 +66,19 @@ def callback():
     }
 
     try:
+        # Obtém o token de acesso usando o código de autorização
         response = requests.post(Config.OAUTH_TOKEN_URL, data=payload)
         response.raise_for_status()
         token_data = response.json()
         access_token = token_data.get('access_token')
 
+        # Obtém as informações do usuário usando o token de acesso
         user_info_response = requests.get(Config.OAUTH_USERINFO_URL, headers={'Authorization': f'Bearer {access_token}'})
         user_info_response.raise_for_status()
         user_info = user_info_response.json()
+
     except requests.RequestException:
         return "Failed to obtain user information", 500
-
-    session['user_info'] = user_info
-    session.permanent = True
 
     user_id = user_info.get('id')
     existing_user = User.query.get(user_id)
@@ -71,9 +88,16 @@ def callback():
         db.session.add(new_user)
         db.session.commit()
 
-    return redirect(url_for('main.index'))
+    # Cria um token de acesso para o usuário
+    jwt_token = create_access_token(identity={'user_info': user_info})
+
+    # Redireciona para a página inicial com o token como um cookie
+    response = redirect(url_for('main.index'))
+    set_access_cookies(response, jwt_token)
+    return response
 
 @bp.route('/')
+@jwt_required(optional=True)
 def index():
     uniques = get_uniques() or []
     filter_class = request.args.get('class', '')
@@ -94,11 +118,20 @@ def index():
 
     all_classes = sorted(set(unique['class'] for unique in uniques if unique['class'] and unique['class'] != 'Classe não disponível'))
 
-    user_info = session.get('user_info')
+    user_info = None
     favorites = []
-    if user_info:
-        user_id = user_info['id']
-        favorites = [fav.item_name for fav in Favorite.query.filter_by(user_id=user_id).all()]
+
+    try:
+        token = request.cookies.get('access_token_cookie')  # Extract token from cookies
+        if token:
+            # Decode the token manually
+            decoded_token = decode_token(token)
+            sub = decoded_token.get('sub')  # Access 'sub' for user_id
+            if sub['user_info']:
+                user_info = {'id': sub['user_info']['id'], 'battletag': sub['user_info']['battletag']}
+                favorites = [fav.item_name for fav in Favorite.query.filter_by(user_id=sub['user_info']['id']).all()]
+    except Exception as e:
+        print(f"Error extracting user info: {e}")
 
     return render_template(
         'index.html',
@@ -113,18 +146,21 @@ def index():
     )
 
 @bp.route('/add_favorite', methods=['POST'])
+@jwt_required()
 def add_favorite():
     data = request.json
     item_name = data.get('item_name')
-    user_info = session.get('user_info')
+    token = request.cookies.get('access_token_cookie')
 
-    if not user_info:
-        return jsonify({'error': 'User not logged in', 'success': False}), 403
-
+    if token:
+        decoded_token = decode_token(token)
+        
+        sub = decoded_token.get('sub')  # Access 'sub' for user_id
+        user_id = sub['user_info']['id']
+        
     if not item_name:
         return jsonify({'error': 'Item name is required', 'success': False}), 400
 
-    user_id = user_info.get('id')
     if not Favorite.query.filter_by(user_id=user_id, item_name=item_name).first():
         new_favorite = Favorite(user_id=user_id, item_name=item_name)
         db.session.add(new_favorite)
@@ -133,18 +169,20 @@ def add_favorite():
     return jsonify({'status': 'Favorite added successfully', 'success': True}), 200
 
 @bp.route('/remove_favorite', methods=['POST'])
+@jwt_required()
 def remove_favorite():
     data = request.json
     item_name = data.get('item_name')
-    user_info = session.get('user_info')
+    token = request.cookies.get('access_token_cookie')
 
-    if not user_info:
-        return jsonify({'error': 'User not logged in', 'success': False}), 403
+    if token:
+        decoded_token = decode_token(token)
+        sub = decoded_token.get('sub')  # Access 'sub' for user_id
+        user_id = sub['user_info']['id']
 
     if not item_name:
         return jsonify({'error': 'Item name is required', 'success': False}), 400
 
-    user_id = user_info['id']
     favorite = Favorite.query.filter_by(user_id=user_id, item_name=item_name).first()
     if favorite:
         db.session.delete(favorite)
@@ -233,15 +271,10 @@ def update_local_data():
             updated_data.append({
                 'type': item_type,
                 'label': item.get('name', ''),
-                'class': item.get('class', 'Generic'),
-                'description': item.get('description', 'Descrição não informada.'),
+                'class': item.get('class', 'Unknown'),
+                'description': item.get('description', 'No description available'),
                 'image_url': item.get('image_url', Config.PLACEHOLDER_IMAGE_URL)
             })
-        else:
-            for updated_item in updated_data:
-                if updated_item.get('label', '').lower() == label:
-                    updated_item['image_url'] = item.get('image_url', Config.PLACEHOLDER_IMAGE_URL)
-                    updated_item['type'] = item_type
 
     save_data_to_file(updated_data)
 

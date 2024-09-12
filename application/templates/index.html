@@ -251,6 +251,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script src="{{ url_for('static', filename='js/search.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
     <script>
         const ITEMS_PER_PAGE = 6;
         let currentPage = {{ page }};
@@ -258,7 +259,7 @@
         let filteredItems = {{ uniques | tojson | safe }};
         let total_pages = {{ total_pages }};
         let favorites = new Set({{ favorites | tojson | safe }}.map(item => item.toLowerCase()));
-
+    
         document.addEventListener("DOMContentLoaded", function() {
         try {
             // Obtenha a string JSON do elemento script
@@ -432,15 +433,33 @@
             });
         }
 
+        // Get the value of a specific cookie
+        function getCookie(name) {
+            // Ensure the cookie name is trimmed
+            const nameEQ = name + "=";
+            const cookies = document.cookie.split(';');
+
+            for(let i = 0; i < cookies.length; i++) {
+                let c = cookies[i];
+                while (c.charAt(0) === ' ') c = c.substring(1);
+                if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+            }
+
+            return null; // Cookie not found
+        }
+        
         function toggleFavorite(itemName) {
             const itemNameLower = itemName.toLowerCase();
             const isFavorite = favorites.has(itemNameLower);
             const url = isFavorite ? '/remove_favorite' : '/add_favorite';
+            const access_token = getCookie('access_token_cookie');
 
+            console.log(Cookies.get())
             fetch(url, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + access_token
                 },
                 body: JSON.stringify({ item_name: itemName })
             })
