@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify, redirect, url_for, render_template, Response, abort, make_response
 import requests
-from flask_jwt_extended import create_access_token, decode_token, jwt_required, get_jwt_identity, unset_jwt_cookies
+from flask_jwt_extended import create_access_token, decode_token, jwt_required, unset_jwt_cookies
+from flask_jwt_extended.exceptions import JWTDecodeError
 from .utils import fetch_data_with_retry, save_data_to_file, load_data_from_file
 from .models import db, User, Favorite
 from .config import Config
@@ -91,6 +92,18 @@ def callback():
     )
     return response
 
+def get_jwt_token_from_cookie():
+    return request.cookies.get('access_token_cookie')
+
+def decode_jwt_token_from_cookie():
+    token = get_jwt_token_from_cookie()
+    if token:
+        try:
+            return decode_token(token)
+        except JWTDecodeError:
+            return None
+    return None
+
 @bp.route('/')
 @jwt_required(optional=True)
 def index():
@@ -116,12 +129,11 @@ def index():
     user_info = None
     favorites = []
 
-    user_identity = get_jwt_identity()
-    print(user_identity)
-    if user_identity:
-        user_id = user_identity.get('user_info', {}).get('id')
+    decoded_token = decode_jwt_token_from_cookie()
+    if decoded_token and 'sub' in decoded_token:
+        user_info = decoded_token['sub']['user_info']
+        user_id = user_info.get('id')
         if user_id:
-            user_info = {'id': user_id, 'battletag': user_identity['user_info'].get('battletag', 'Desconhecido')}
             favorites = [fav.item_name for fav in Favorite.query.filter_by(user_id=user_id).all()]
 
     return render_template(
@@ -137,7 +149,6 @@ def index():
     )
 
 @bp.route('/add_favorite', methods=['POST'])
-@jwt_required()
 def add_favorite():
     if not request.is_json:
         return jsonify({'error': 'Request must be JSON'}), 400
@@ -148,21 +159,19 @@ def add_favorite():
     if not item_name:
         return jsonify({'error': 'Item name is required'}), 400
 
-    user_identity = get_jwt_identity()
-    print(user_identity)
-    if user_identity:
-        user_id = user_identity.get('user_info', {}).get('id')
-        if user_id:
-            if not Favorite.query.filter_by(user_id=user_id, item_name=item_name).first():
-                new_favorite = Favorite(user_id=user_id, item_name=item_name)
-                db.session.add(new_favorite)
-                db.session.commit()
-            return jsonify({'status': 'Favorite added successfully', 'success': True}), 200
+    decoded_token = decode_jwt_token_from_cookie()
+    print(decoded_token)
+    if decoded_token and 'sub' in decoded_token:
+        user_id = decoded_token['sub']['user_info']['id']
+        if not Favorite.query.filter_by(user_id=user_id, item_name=item_name).first():
+            new_favorite = Favorite(user_id=user_id, item_name=item_name)
+            db.session.add(new_favorite)
+            db.session.commit()
+        return jsonify({'status': 'Favorite added successfully', 'success': True}), 200
 
     return jsonify({'error': 'User not authenticated'}), 401
 
 @bp.route('/remove_favorite', methods=['POST'])
-@jwt_required()
 def remove_favorite():
     if not request.is_json:
         return jsonify({'error': 'Request must be JSON'}), 400
@@ -173,15 +182,14 @@ def remove_favorite():
     if not item_name:
         return jsonify({'error': 'Item name is required'}), 400
 
-    user_identity = get_jwt_identity()
-    if user_identity:
-        user_id = user_identity.get('user_info', {}).get('id')
-        if user_id:
-            favorite = Favorite.query.filter_by(user_id=user_id, item_name=item_name).first()
-            if favorite:
-                db.session.delete(favorite)
-                db.session.commit()
-            return jsonify({'status': 'Favorite removed successfully', 'success': True}), 200
+    decoded_token = decode_jwt_token_from_cookie()
+    if decoded_token and 'sub' in decoded_token:
+        user_id = decoded_token['sub']['user_info']['id']
+        favorite = Favorite.query.filter_by(user_id=user_id, item_name=item_name).first()
+        if favorite:
+            db.session.delete(favorite)
+            db.session.commit()
+        return jsonify({'status': 'Favorite removed successfully', 'success': True}), 200
 
     return jsonify({'error': 'User not authenticated'}), 401
 
