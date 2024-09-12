@@ -84,10 +84,10 @@ def callback():
     response.set_cookie(
         'access_token_cookie',
         jwt_token,
-        httponly=True,  # Ajustado para proteger o cookie
+        httponly=False,
         samesite='Lax',
-        secure=True,  # Certifique-se de que está usando HTTPS
-        max_age=3600  # 1 hora
+        secure=True,
+        max_age=3600
     )
     return response
 
