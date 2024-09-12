@@ -120,6 +120,7 @@ def index():
     favorites = []
 
     token = get_jwt_token_from_cookie()
+    print(token)
     if token:
         try:
             decoded_token = decode_token(token)
@@ -155,7 +156,6 @@ def add_favorite():
         return jsonify({'error': 'Item name is required'}), 400
 
     token = get_jwt_token_from_cookie()
-    print(request)
     if not token:
         return jsonify({'error': 'Authorization cookie missing or invalid'}), 401
 
