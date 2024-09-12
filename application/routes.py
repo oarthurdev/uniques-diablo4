@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, redirect, url_for, render_template, Response, abort
+from flask import Blueprint, request, jsonify, redirect, url_for, render_template, Response, abort, make_response
 import requests
 from flask_jwt_extended import create_access_token, decode_token, jwt_required, get_jwt_identity, unset_jwt_cookies, set_access_cookies
 from .utils import fetch_data_with_retry, save_data_to_file, load_data_from_file
@@ -87,16 +87,16 @@ def callback():
 
     jwt_token = create_access_token(identity={'user_info': user_info})
 
-    response = redirect(url_for('main.index'))
-    set_access_cookies(response, jwt_token)
-    
-    # Ajuste os atributos do cookie manualmente
-    cookies = response.headers.getlist('Set-Cookie')
-    response.headers['Set-Cookie'] = '; '.join(
-        cookie + '; SameSite=Lax; Secure'
-        for cookie in cookies
+    response = make_response(redirect(url_for('main.index')))
+    # Define the cookie manually without HttpOnly
+    response.set_cookie(
+        'access_token_cookie',
+        jwt_token,
+        httponly=False,  # Ensure that HttpOnly is set to False
+        samesite='Lax',
+        secure=True,
+        max_age=3600
     )
-    
     return response
 
 @bp.route('/')
