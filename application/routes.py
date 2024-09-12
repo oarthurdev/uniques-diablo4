@@ -105,7 +105,6 @@ def decode_jwt_token_from_cookie():
     return None
 
 @bp.route('/')
-@jwt_required(optional=True)
 def index():
     uniques = get_uniques() or []
     filter_class = request.args.get('class', '')
@@ -160,7 +159,6 @@ def add_favorite():
         return jsonify({'error': 'Item name is required'}), 400
 
     decoded_token = decode_jwt_token_from_cookie()
-    print(decoded_token)
     if decoded_token and 'sub' in decoded_token:
         user_id = decoded_token['sub']['user_info']['id']
         if not Favorite.query.filter_by(user_id=user_id, item_name=item_name).first():
