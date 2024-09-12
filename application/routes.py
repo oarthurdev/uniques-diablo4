@@ -13,12 +13,6 @@ def add_header(response):
     response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
     response.headers['Pragma'] = 'no-cache'
     response.headers['Expires'] = '0'
-    # Adiciona atributos SameSite e Secure aos cookies
-    cookies = response.headers.getlist('Set-Cookie')
-    response.headers['Set-Cookie'] = '; '.join(
-        cookie + '; SameSite=Lax; Secure' if 'SameSite' not in cookie else cookie
-        for cookie in cookies
-    )
     return response
 
 @bp.route('/auth-status', methods=['GET'])
@@ -40,6 +34,12 @@ def auth_status():
     else:
         return jsonify({'loggedIn': False}), 200
 
+@bp.route('/logout', methods=['POST'])
+def logout():
+    response = jsonify({'status': 'Logged out successfully'})
+    unset_jwt_cookies(response)
+    return response, 200
+
 @bp.route('/login')
 def battle_net_login():
     state = secrets.token_urlsafe()
@@ -48,12 +48,6 @@ def battle_net_login():
         f"&redirect_uri={Config.BASE_URL}/callback&response_type=code"
         f"&scope=openid&state={state}"
     )
-
-@bp.route('/logout', methods=['POST'])
-def logout():
-    response = jsonify({'status': 'Logged out successfully'})
-    unset_jwt_cookies(response)
-    return response, 200
 
 @bp.route('/callback')
 def callback():
@@ -94,8 +88,15 @@ def callback():
     jwt_token = create_access_token(identity={'user_info': user_info})
 
     response = redirect(url_for('main.index'))
-    # Configura o cookie JWT com SameSite e Secure
-    set_access_cookies(response, jwt_token, max_age=3600, samesite='Lax', secure=True)
+    set_access_cookies(response, jwt_token)
+    
+    # Ajuste os atributos do cookie manualmente
+    cookies = response.headers.getlist('Set-Cookie')
+    response.headers['Set-Cookie'] = '; '.join(
+        cookie + '; SameSite=Lax; Secure'
+        for cookie in cookies
+    )
+    
     return response
 
 @bp.route('/')
@@ -124,11 +125,10 @@ def index():
     favorites = []
 
     try:
-        token = request.cookies.get('access_token_cookie')  # Extract token from cookies
+        token = request.cookies.get('access_token_cookie')
         if token:
-            # Decode the token manually
             decoded_token = decode_token(token)
-            sub = decoded_token.get('sub')  # Access 'sub' for user_id
+            sub = decoded_token.get('sub')
             if sub['user_info']:
                 user_info = {'id': sub['user_info']['id'], 'battletag': sub['user_info']['battletag']}
                 favorites = [fav.item_name for fav in Favorite.query.filter_by(user_id=sub['user_info']['id']).all()]
@@ -157,7 +157,7 @@ def add_favorite():
     if token:
         decoded_token = decode_token(token)
         
-        sub = decoded_token.get('sub')  # Access 'sub' for user_id
+        sub = decoded_token.get('sub')
         user_id = sub['user_info']['id']
         
     if not item_name:
@@ -179,7 +179,7 @@ def remove_favorite():
 
     if token:
         decoded_token = decode_token(token)
-        sub = decoded_token.get('sub')  # Access 'sub' for user_id
+        sub = decoded_token.get('sub')
         user_id = sub['user_info']['id']
 
     if not item_name:
