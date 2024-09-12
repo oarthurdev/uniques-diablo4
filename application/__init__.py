@@ -11,4 +11,5 @@ def create_app():
     app.register_blueprint(main_bp)
     CORS(app)
     app.config.update(SESSION_COOKIE_SAMESITE="None", SESSION_COOKIE_SECURE=True)
+    app.config["SESSION_PERMANENT"] = True
     return app
