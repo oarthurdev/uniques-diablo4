@@ -156,38 +156,26 @@ def index():
 @bp.route('/add_favorite', methods=['POST'])
 @jwt_required()
 def add_favorite():
-    print(f"Headers: {request.headers}")
-    print(f"Body: {request.data}")
-
-    if not request.is_json:
-        return jsonify({'error': 'Request must be JSON'}), 400
-
     data = request.json
     item_name = data.get('item_name')
-
-    print(f"Data: {data}")
-    print(f"Item Name: {item_name}")
-
     token = get_jwt_token_from_header()
-    print(f"Token: {token}")
 
+    print(token)
     if token:
-        try:
-            decoded_token = decode_token(token)
-            sub = decoded_token.get('sub')
-            user_id = sub['user_info']['id']
-            print(f"User ID: {user_id}")
+        decoded_token = decode_token(token)
+        
+        sub = decoded_token.get('sub')
+        user_id = sub['user_info']['id']
+        
+    if not item_name:
+        return jsonify({'error': 'Item name is required', 'success': False}), 400
 
-            if not Favorite.query.filter_by(user_id=user_id, item_name=item_name).first():
-                new_favorite = Favorite(user_id=user_id, item_name=item_name)
-                db.session.add(new_favorite)
-                db.session.commit()
+    if not Favorite.query.filter_by(user_id=user_id, item_name=item_name).first():
+        new_favorite = Favorite(user_id=user_id, item_name=item_name)
+        db.session.add(new_favorite)
+        db.session.commit()
 
-            return jsonify({'status': 'Favorite added successfully', 'success': True}), 200
-        except Exception as e:
-            return jsonify({'error': 'Invalid token', 'success': False, 'details': str(e)}), 401
-    else:
-        return jsonify({'error': 'Authorization header missing or invalid', 'success': False}), 401
+    return jsonify({'status': 'Favorite added successfully', 'success': True}), 200
 
 @bp.route('/remove_favorite', methods=['POST'])
 @jwt_required()
