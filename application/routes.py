@@ -102,7 +102,7 @@ def callback():
     response.set_cookie(
         'access_token_cookie',
         jwt_token,
-        httponly=True,
+        httponly=False,
         secure=True,
         max_age=60*60*24*7  # 7 dias
     )
