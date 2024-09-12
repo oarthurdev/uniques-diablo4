@@ -98,13 +98,18 @@ def callback():
     existing_user.jwt_token = jwt_token  # Atualiza o token JWT no banco de dados
     db.session.commit()
 
-    return redirect(url_for('main.index'))
+    response = redirect(url_for('main.index'))
+    response.set_cookie('access_token', jwt_token, httponly=True)
+    return response
 
 def get_jwt_token_from_db(user_id):
     user = User.query.get(user_id)
     if user and user.jwt_token:
         return user.jwt_token
     return None
+
+def get_jwt_token_from_cookie():
+    return request.cookies.get('access_token')
 
 @bp.route('/')
 @jwt_required(optional=True)
@@ -113,6 +118,9 @@ def index():
     filter_class = request.args.get('class', '')
     filter_name = request.args.get('name', '').lower()
     page = int(request.args.get('page', 1))
+
+    token = get_jwt_token_from_cookie()
+    user_identity = get_jwt_identity()
 
     filtered_uniques = [
         unique for unique in uniques
@@ -131,8 +139,6 @@ def index():
     user_info = None
     favorites = []
 
-    # Use the user_id from the JWT token
-    user_identity = get_jwt_identity()
     print(user_identity)
     if user_identity:
         user_id = user_identity.get('user_info', {}).get('id')
