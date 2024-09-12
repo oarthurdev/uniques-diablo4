@@ -9,7 +9,7 @@ class Config:
     JSON_FILE_PATH = 'uniques_data.json'
     ITEMS_PER_PAGE = 6
     PLACEHOLDER_IMAGE_URL = 'https://via.placeholder.com/200x200'
-    BASE_URL = 'http://localhost:5000'
+    BASE_URL = 'http://uniques-diablo4.vercel.app/'
     CODDEX_API_URL = 'https://d4api.dev/api/codex'
     UNIQUES_API_URL = 'https://d4api.dev/api/uniques'
     BATTLE_NET_CLIENT_ID = '61903ba666634e469e7b4977be4972f4'
