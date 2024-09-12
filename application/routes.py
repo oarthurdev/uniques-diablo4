@@ -101,8 +101,6 @@ def callback():
         'access_token_cookie',
         jwt_token,
         httponly=False,  # Ensure that HttpOnly is set to False
-        samesite='Lax',
-        secure=True,
         max_age=3600
     )
     return response
