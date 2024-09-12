@@ -14,7 +14,7 @@ def create_app():
     db.init_app(app)
 
     # Initialize Flask-Session if using server-side sessions
-    app.config['SESSION_TYPE'] = 'filesystem'  # or 'redis', 'mongodb', etc.
+    app.config['SESSION_TYPE'] = 'null'  # or 'redis', 'mongodb', etc.
     app.config['SESSION_PERMANENT'] = False
     app.config['SESSION_USE_SIGNER'] = True
     Session(app)
