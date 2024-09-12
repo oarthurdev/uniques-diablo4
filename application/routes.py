@@ -120,7 +120,6 @@ def index():
     favorites = []
 
     token = get_jwt_token_from_cookie()
-    print(token)
     if token:
         try:
             decoded_token = decode_token(token)
@@ -144,7 +143,7 @@ def index():
     )
 
 @bp.route('/add_favorite', methods=['POST'])
-@jwt_required()
+@jwt_required(optional=True)
 def add_favorite():
     if not request.is_json:
         return jsonify({'error': 'Request must be JSON'}), 400
