@@ -35,7 +35,6 @@ def auth_status():
         return jsonify({'loggedIn': False}), 200
 
 @bp.route('/logout', methods=['POST'])
-@jwt_required()
 def logout():
     response = jsonify({'status': 'Logged out successfully'})
     unset_jwt_cookies(response)
