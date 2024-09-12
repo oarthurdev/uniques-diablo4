@@ -120,13 +120,13 @@ def index():
     favorites = []
 
     token = get_jwt_token_from_cookie()
-    print(token)
     if token:
         try:
             decoded_token = decode_token(token)
             sub = decoded_token.get('sub')
             if sub and 'user_info' in sub:
                 user_info = {'id': sub['user_info']['id'], 'battletag': sub['user_info']['battletag']}
+                print(user_info)
                 favorites = [fav.item_name for fav in Favorite.query.filter_by(user_id=sub['user_info']['id']).all()]
         except Exception as e:
             print(f"Error extracting user info: {e}")
