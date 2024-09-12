@@ -120,6 +120,7 @@ def index():
     favorites = []
 
     token = get_jwt_token_from_cookie()
+    print(token)
     if token:
         try:
             decoded_token = decode_token(token)
