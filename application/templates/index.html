@@ -448,13 +448,13 @@
             return null; // Cookie not found
         }
         
-        async function toggleFavorite(itemName) {
+        function toggleFavorite(itemName) {
             const itemNameLower = itemName.toLowerCase();
             const isFavorite = favorites.has(itemNameLower);
             const url = isFavorite ? '/remove_favorite' : '/add_favorite';
             const access_token = getCookie('access_token_cookie');
 
-            await fetch(url, {
+            fetch(url, {
                 method: 'POST',
                 credentials: 'include',
                 headers: {
