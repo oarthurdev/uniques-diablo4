@@ -134,7 +134,7 @@ def index():
     # Use the user_id from the request args or a JWT token from the database
     user_id = request.args.get('user_id')
     if not user_id:
-        token = get_jwt_token_from_header()
+        token = get_jwt_token_from_db()
         if token:
             try:
                 decoded_token = decode_token(token)
@@ -173,7 +173,7 @@ def index():
 def add_favorite():
     data = request.json
     item_name = data.get('item_name')
-    token = get_jwt_token_from_header()
+    token = get_jwt_token_from_db()
 
     if token:
         decoded_token = decode_token(token)
