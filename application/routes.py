@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify, redirect, session, url_for, render_template, Response, abort, make_response
 import requests
-from flask_jwt_extended import create_access_token, decode_token, jwt_required, get_jwt_identity, unset_jwt_cookies, set_access_cookies
+from flask_jwt_extended import create_access_token, decode_token, jwt_required, get_jwt_identity, unset_jwt_cookies
 from .utils import fetch_data_with_retry, save_data_to_file, load_data_from_file
 from .models import db, User, Favorite
 from .config import Config
@@ -36,9 +36,8 @@ def auth_status():
 
 @bp.route('/logout', methods=['POST'])
 def logout():
-    response = jsonify({'status': 'Logged out successfully'})
-    unset_jwt_cookies(response)
-    return response, 200
+    session.pop('jwt_token', None)  # Remove o token da sessão
+    return jsonify({'status': 'Logged out successfully'}), 200
 
 @bp.route('/login')
 def battle_net_login():
@@ -94,24 +93,12 @@ def callback():
         db.session.commit()
 
     jwt_token = create_access_token(identity={'user_info': user_info})
+    session['jwt_token'] = jwt_token  # Armazena o token na sessão
+    
+    return redirect(url_for('main.index'))
 
-    response = make_response(redirect(url_for('main.index')))
-    # Define the cookie manually without HttpOnly
-    response.set_cookie(
-        'access_token_cookie',
-        jwt_token,
-        httponly=False,
-        samesite='Lax',
-        secure=True
-    )
-
-    return response
-
-def get_jwt_token_from_header():
-    auth_header = request.headers.get('Authorization', None)
-    if auth_header and auth_header.startswith('Bearer '):
-        return auth_header[len('Bearer '):]
-    return None
+def get_jwt_token_from_session():
+    return session.get('jwt_token')
 
 @bp.route('/')
 @jwt_required(optional=True)
@@ -138,7 +125,7 @@ def index():
     user_info = None
     favorites = []
 
-    token = request.cookies.get('access_token_cookie')
+    token = get_jwt_token_from_session()
     if token:
         try:
             decoded_token = decode_token(token)
@@ -165,17 +152,14 @@ def index():
 @jwt_required()
 def add_favorite():
     data = request.json
-    print(data)
     item_name = data.get('item_name')
-    token = get_jwt_token_from_header()
+    token = get_jwt_token_from_session()
 
-    print(token)
     if token:
         decoded_token = decode_token(token)
-        
         sub = decoded_token.get('sub')
         user_id = sub['user_info']['id']
-        
+
     if not item_name:
         return jsonify({'error': 'Item name is required', 'success': False}), 400
 
@@ -191,7 +175,7 @@ def add_favorite():
 def remove_favorite():
     data = request.json
     item_name = data.get('item_name')
-    token = get_jwt_token_from_header()
+    token = get_jwt_token_from_session()
 
     if token:
         decoded_token = decode_token(token)
