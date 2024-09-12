@@ -174,17 +174,19 @@
 <body>
     <!-- Header with Battle Tag, Profile Image, and Logout Button -->
     <div class="header">
-        {% if user_info %}
-            <span class="battle-tag">{{ user_info.battletag }}</span>
-            <form action="{{ url_for('main.logout') }}" method="POST" style="margin: 0;">
-                <button type="submit" class="logout-btn" aria-label="Logout">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-log-out">
-                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                        <polyline points="16 17 21 12 16 7"></polyline>
-                        <line x1="21" y1="12" x2="9" y2="12"></line>
-                    </svg>
-                </button>
-            </form>
+        {% if token}
+            {% if user_info %}
+                <span class="battle-tag">{{ user_info.battletag }}</span>
+                <form action="{{ url_for('main.logout') }}" method="POST" style="margin: 0;">
+                    <button type="submit" class="logout-btn" aria-label="Logout">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-log-out">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                            <polyline points="16 17 21 12 16 7"></polyline>
+                            <line x1="21" y1="12" x2="9" y2="12"></line>
+                        </svg>
+                    </button>
+                </form>
+            {% else %}
         {% else %}
             <a href="{{ url_for('main.battle_net_login') }}" class="login-btn">
                 <svg focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 580.4">

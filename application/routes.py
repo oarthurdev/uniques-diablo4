@@ -157,6 +157,7 @@ def index():
         page=page,
         total_pages=total_pages,
         user_info=user_info,
+        token=token,
         favorites=favorites
     )
 
