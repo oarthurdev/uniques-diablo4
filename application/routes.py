@@ -101,7 +101,8 @@ def callback():
         'access_token_cookie',
         jwt_token,
         httponly=True,
-        secure=True
+        secure=True,
+        max_age=60*60*24*7  # 7 days
     )
 
     return response
