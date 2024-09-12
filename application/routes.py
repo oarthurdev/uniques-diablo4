@@ -160,7 +160,7 @@ def add_favorite():
     item_name = data.get('item_name')
     token = get_jwt_token_from_header()
 
-    print(token)
+    print(request)
     if token:
         decoded_token = decode_token(token)
         
