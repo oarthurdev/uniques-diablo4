@@ -177,7 +177,7 @@
         {% if user_info %}
             <span class="battle-tag">{{ user_info.battletag }}</span>
             <form action="{{ url_for('main.logout') }}" method="POST" style="margin: 0;">
-                <button type="submit" class="logout-btn" aria-label="Logout">
+                <button id="logout-btn" class="logout-btn" aria-label="Logout">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-log-out">
                         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
                         <polyline points="16 17 21 12 16 7"></polyline>
@@ -261,51 +261,82 @@
         let favorites = new Set({{ favorites | tojson | safe }}.map(item => item.toLowerCase()));
     
         document.addEventListener("DOMContentLoaded", function() {
-        try {
-            // Obtenha a string JSON do elemento script
-            const jsonString = document.getElementById('uniquesData').textContent;
+            const logoutBtn = document.getElementById('logout-btn');
 
-            // Decodifique o JSON
-            allItems = JSON.parse(jsonString);
-
-            // Verifique se allItems é um array
-            if (!Array.isArray(allItems)) {
-                throw new Error('Os dados JSON não são um array.');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', function() {
+                    // Obtenha o token de acesso dos cookies
+                    const accessToken = getCookie('access_token_cookie');
+                    
+                    fetch('{{ url_for('main.logout') }}', {
+                        method: 'POST',
+                        credentials: 'include', // Inclua cookies na requisição
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + accessToken
+                        }
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            // Redirecionar para a página inicial após o logout
+                            window.location.href = '/';
+                        } else {
+                            // Mostrar mensagem de erro, se necessário
+                            alert('Erro ao realizar logout.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erro na requisição de logout:', error);
+                        alert('Erro ao realizar logout.');
+                    });
+                });
             }
 
-            // Renderize os itens
-            const container = document.getElementById('uniquesContainer');
-            container.innerHTML = allItems.map(item => `
-                <div class="col-md-4 mb-4 item" data-name="${item.name.toLowerCase()}" data-class="${item.class.toLowerCase()}">
-                    <div class="card">
-                        <div class="image-container ${item.type === 'Mythic' ? 'mythic' : ''}" 
-                            data-toggle="modal" 
-                            data-target="#imageModal" 
-                            data-image-url="${item.image_url}" 
-                            data-item-name="${item.name}">
-                            <img src="https://uniques-diablo4.vercel.app/image?name=${item.name}" alt="${item.name}">
-                        </div>
-                        <div class="card-body">
-                            <h5 class="card-title">${item.name}</h5>
-                            <p class="card-text">Type: ${item.type}</p>
-                            <p class="card-text">Classe: ${item.class}</p>
-                            <p class="card-text">Poder: ${item.power}</p>
-                            <button class="btn btn-outline-primary favorite-btn" 
-                                    data-item-name="${item.name}">
-                                ${favorites.has(item.name.toLowerCase()) ? '⭐ Favorito' : '☆ Adicionar aos Favoritos'}
-                            </button>
+            try {
+                // Obtenha a string JSON do elemento script
+                const jsonString = document.getElementById('uniquesData').textContent;
+
+                // Decodifique o JSON
+                allItems = JSON.parse(jsonString);
+
+                // Verifique se allItems é um array
+                if (!Array.isArray(allItems)) {
+                    throw new Error('Os dados JSON não são um array.');
+                }
+
+                // Renderize os itens
+                const container = document.getElementById('uniquesContainer');
+                container.innerHTML = allItems.map(item => `
+                    <div class="col-md-4 mb-4 item" data-name="${item.name.toLowerCase()}" data-class="${item.class.toLowerCase()}">
+                        <div class="card">
+                            <div class="image-container ${item.type === 'Mythic' ? 'mythic' : ''}" 
+                                data-toggle="modal" 
+                                data-target="#imageModal" 
+                                data-image-url="${item.image_url}" 
+                                data-item-name="${item.name}">
+                                <img src="https://uniques-diablo4.vercel.app/image?name=${item.name}" alt="${item.name}">
+                            </div>
+                            <div class="card-body">
+                                <h5 class="card-title">${item.name}</h5>
+                                <p class="card-text">Type: ${item.type}</p>
+                                <p class="card-text">Classe: ${item.class}</p>
+                                <p class="card-text">Poder: ${item.power}</p>
+                                <button class="btn btn-outline-primary favorite-btn" 
+                                        data-item-name="${item.name}">
+                                    ${favorites.has(item.name.toLowerCase()) ? '⭐ Favorito' : '☆ Adicionar aos Favoritos'}
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            `).join('');
-            
-            // Atualize os botões de favoritos ao carregar
-            updateFavoriteButtons();
-        } catch (e) {
-            console.error('Erro ao processar o JSON:', e);
-        }
-    });
-    
+                `).join('');
+                
+                // Atualize os botões de favoritos ao carregar
+                updateFavoriteButtons();
+            } catch (e) {
+                console.error('Erro ao processar o JSON:', e);
+            }
+        });
+        
         function updatePagination(total_page) {
             const pagination = document.getElementById('pagination');
             const totalPages = total_page;
