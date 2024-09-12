@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, redirect, url_for, render_template, Response, abort, make_response
+from flask import Blueprint, request, jsonify, redirect, session, url_for, render_template, Response, abort, make_response
 import requests
 from flask_jwt_extended import create_access_token, decode_token, jwt_required, get_jwt_identity, unset_jwt_cookies, set_access_cookies
 from .utils import fetch_data_with_retry, save_data_to_file, load_data_from_file
@@ -42,12 +42,17 @@ def logout():
 
 @bp.route('/login')
 def battle_net_login():
-    state = secrets.token_urlsafe()
-    return redirect(
-        f"https://battle.net/oauth/authorize?client_id={Config.BATTLE_NET_CLIENT_ID}"
-        f"&redirect_uri={Config.BASE_URL}/callback&response_type=code"
-        f"&scope=openid&state={state}"
+    state = secrets.token_urlsafe()  # Gera um estado seguro
+    session['oauth_state'] = state  # Armazena o estado na sessão
+    client_id = '61903ba666634e469e7b4977be4972f4'
+    redirect_uri = url_for('callback', _external=True)
+    scope = 'openid'
+    auth_url = (
+        f"https://battle.net/oauth/authorize?client_id={client_id}"
+        f"&redirect_uri={redirect_uri}&response_type=code"
+        f"&scope={scope}&state={state}"
     )
+    return redirect(auth_url)
 
 @bp.route('/callback')
 def callback():
@@ -55,6 +60,9 @@ def callback():
     code = request.args.get('code')
     if not code:
         return "Authorization code missing", 400
+
+    if state != session.get('oauth_state'):
+        return "State parameter mismatch", 400
 
     payload = {
         'grant_type': 'authorization_code',
