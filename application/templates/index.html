@@ -454,7 +454,6 @@
             const url = isFavorite ? '/remove_favorite' : '/add_favorite';
             const access_token = getCookie('access_token_cookie');
 
-            console.log(Cookies.get())
             fetch(url, {
                 method: 'POST',
                 credentials: 'include',

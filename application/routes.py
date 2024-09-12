@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify, redirect, url_for, render_template, Response, abort, make_response
 import requests
-from flask_jwt_extended import create_access_token, decode_token, jwt_required, get_jwt_identity, unset_jwt_cookies, set_access_cookies
+from flask_jwt_extended import create_access_token, decode_token, jwt_required, get_jwt_identity, unset_jwt_cookies
 from .utils import fetch_data_with_retry, save_data_to_file, load_data_from_file
 from .models import db, User, Favorite
 from .config import Config
@@ -19,20 +19,14 @@ def add_header(response):
 @jwt_required(optional=True)
 def auth_status():
     user_identity = get_jwt_identity()
-    
-    if user_identity is None:
-        return jsonify({'loggedIn': False}), 200
-    
-    user_id = user_identity.get('user_id')
-    user = User.query.get(user_id)
-    
-    if user:
-        return jsonify({
-            'loggedIn': True,
-            'battleTag': user.data.get('battleTag', 'Desconhecido')
-        }), 200
-    else:
-        return jsonify({'loggedIn': False}), 200
+    if user_identity:
+        user = User.query.get(user_identity.get('user_id'))
+        if user:
+            return jsonify({
+                'loggedIn': True,
+                'battleTag': user.data.get('battleTag', 'Desconhecido')
+            }), 200
+    return jsonify({'loggedIn': False}), 200
 
 @bp.route('/logout', methods=['POST'])
 def logout():
@@ -79,7 +73,6 @@ def callback():
 
     user_id = user_info.get('id')
     existing_user = User.query.get(user_id)
-
     if not existing_user:
         new_user = User(id=user_id, data=user_info)
         db.session.add(new_user)
@@ -88,22 +81,18 @@ def callback():
     jwt_token = create_access_token(identity={'user_info': user_info})
 
     response = make_response(redirect(url_for('main.index')))
-    # Define the cookie manually without HttpOnly
     response.set_cookie(
         'access_token_cookie',
         jwt_token,
-        httponly=False,  # Ensure that HttpOnly is set to False
+        httponly=False,
         samesite='Lax',
         secure=True,
         max_age=3600
     )
     return response
 
-def get_jwt_token_from_header():
-    auth_header = request.headers.get('Authorization', None)
-    if auth_header and auth_header.startswith('Bearer '):
-        return auth_header[len('Bearer '):]
-    return None
+def get_jwt_token_from_cookie():
+    return request.cookies.get('access_token_cookie')
 
 @bp.route('/')
 @jwt_required(optional=True)
@@ -130,16 +119,16 @@ def index():
     user_info = None
     favorites = []
 
-    try:
-        token = request.cookies.get('access_token_cookie')
-        if token:
+    token = get_jwt_token_from_cookie()
+    if token:
+        try:
             decoded_token = decode_token(token)
             sub = decoded_token.get('sub')
-            if sub['user_info']:
+            if sub and 'user_info' in sub:
                 user_info = {'id': sub['user_info']['id'], 'battletag': sub['user_info']['battletag']}
                 favorites = [fav.item_name for fav in Favorite.query.filter_by(user_id=sub['user_info']['id']).all()]
-    except Exception as e:
-        print(f"Error extracting user info: {e}")
+        except Exception as e:
+            print(f"Error extracting user info: {e}")
 
     return render_template(
         'index.html',
@@ -156,60 +145,60 @@ def index():
 @bp.route('/add_favorite', methods=['POST'])
 @jwt_required()
 def add_favorite():
-    print(f"Headers: {request.headers}")
-    print(f"Body: {request.data}")
-
     if not request.is_json:
         return jsonify({'error': 'Request must be JSON'}), 400
 
     data = request.json
     item_name = data.get('item_name')
 
-    print(f"Data: {data}")
-    print(f"Item Name: {item_name}")
+    if not item_name:
+        return jsonify({'error': 'Item name is required'}), 400
 
-    token = get_jwt_token_from_header()
-    print(f"Token: {token}")
+    token = get_jwt_token_from_cookie()
+    if not token:
+        return jsonify({'error': 'Authorization cookie missing or invalid'}), 401
 
-    if token:
-        try:
-            decoded_token = decode_token(token)
-            sub = decoded_token.get('sub')
-            user_id = sub['user_info']['id']
-            print(f"User ID: {user_id}")
+    try:
+        decoded_token = decode_token(token)
+        user_id = decoded_token['sub']['user_info']['id']
 
-            if not Favorite.query.filter_by(user_id=user_id, item_name=item_name).first():
-                new_favorite = Favorite(user_id=user_id, item_name=item_name)
-                db.session.add(new_favorite)
-                db.session.commit()
+        if not Favorite.query.filter_by(user_id=user_id, item_name=item_name).first():
+            new_favorite = Favorite(user_id=user_id, item_name=item_name)
+            db.session.add(new_favorite)
+            db.session.commit()
 
-            return jsonify({'status': 'Favorite added successfully', 'success': True}), 200
-        except Exception as e:
-            return jsonify({'error': 'Invalid token', 'success': False, 'details': str(e)}), 401
-    else:
-        return jsonify({'error': 'Authorization header missing or invalid', 'success': False}), 401
+        return jsonify({'status': 'Favorite added successfully', 'success': True}), 200
+    except Exception as e:
+        return jsonify({'error': 'Invalid token', 'success': False, 'details': str(e)}), 401
 
 @bp.route('/remove_favorite', methods=['POST'])
 @jwt_required()
 def remove_favorite():
+    if not request.is_json:
+        return jsonify({'error': 'Request must be JSON'}), 400
+
     data = request.json
     item_name = data.get('item_name')
-    token = get_jwt_token_from_header()
-
-    if token:
-        decoded_token = decode_token(token)
-        sub = decoded_token.get('sub')
-        user_id = sub['user_info']['id']
 
     if not item_name:
-        return jsonify({'error': 'Item name is required', 'success': False}), 400
+        return jsonify({'error': 'Item name is required'}), 400
 
-    favorite = Favorite.query.filter_by(user_id=user_id, item_name=item_name).first()
-    if favorite:
-        db.session.delete(favorite)
-        db.session.commit()
+    token = get_jwt_token_from_cookie()
+    if not token:
+        return jsonify({'error': 'Authorization cookie missing or invalid'}), 401
 
-    return jsonify({'status': 'Favorite removed successfully', 'success': True}), 200
+    try:
+        decoded_token = decode_token(token)
+        user_id = decoded_token['sub']['user_info']['id']
+
+        favorite = Favorite.query.filter_by(user_id=user_id, item_name=item_name).first()
+        if favorite:
+            db.session.delete(favorite)
+            db.session.commit()
+
+        return jsonify({'status': 'Favorite removed successfully', 'success': True}), 200
+    except Exception as e:
+        return jsonify({'error': 'Invalid token', 'success': False, 'details': str(e)}), 401
 
 @bp.route('/image')
 def get_image():
