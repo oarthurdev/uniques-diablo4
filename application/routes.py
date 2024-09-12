@@ -100,7 +100,7 @@ def callback():
     response.set_cookie(
         'access_token_cookie',
         jwt_token,
-        httponly=True,
+        httponly=False,
         samesite='Lax',
         secure=True
     )
