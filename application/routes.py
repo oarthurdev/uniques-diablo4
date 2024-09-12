@@ -45,7 +45,7 @@ def battle_net_login():
     state = secrets.token_urlsafe()  # Gera um estado seguro
     session['oauth_state'] = state  # Armazena o estado na sessão
     client_id = '61903ba666634e469e7b4977be4972f4'
-    redirect_uri = url_for('callback', _external=True)
+    redirect_uri = url_for('main.callback', _external=True)
     scope = 'openid'
     auth_url = (
         f"https://battle.net/oauth/authorize?client_id={client_id}"
