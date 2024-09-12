@@ -89,20 +89,22 @@ def callback():
     existing_user = User.query.get(user_id)
 
     if not existing_user:
-        new_user = User(id=user_id, data=user_info)
+        new_user = User(id=user_id, data=user_info, jwt_token='')  # Cria o usuário com um token vazio
         db.session.add(new_user)
         db.session.commit()
+        existing_user = new_user
 
     jwt_token = create_access_token(identity={'user_info': user_info})
+    existing_user.jwt_token = jwt_token  # Atualiza o token JWT no banco de dados
+    db.session.commit()
 
     response = make_response(redirect(url_for('main.index')))
-    # Define the cookie manually without HttpOnly
     response.set_cookie(
         'access_token_cookie',
         jwt_token,
         httponly=True,
         secure=True,
-        max_age=60*60*24*7  # 7 days
+        max_age=60*60*24*7  # 7 dias
     )
 
     return response
@@ -139,6 +141,14 @@ def index():
     favorites = []
 
     token = request.cookies.get('access_token_cookie')
+    if not token:
+        # Verifica o token no banco de dados se não estiver no cookie
+        user_id = request.args.get('user_id')
+        if user_id:
+            user = User.query.get(user_id)
+            if user and user.jwt_token:
+                token = user.jwt_token
+
     if token:
         try:
             decoded_token = decode_token(token)
