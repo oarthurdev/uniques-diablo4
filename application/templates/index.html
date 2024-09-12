@@ -457,6 +457,7 @@
             console.log(Cookies.get())
             fetch(url, {
                 method: 'POST',
+                credentials: 'include',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': 'Bearer ' + access_token

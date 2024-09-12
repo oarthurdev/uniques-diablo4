@@ -13,6 +13,12 @@ def add_header(response):
     response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
     response.headers['Pragma'] = 'no-cache'
     response.headers['Expires'] = '0'
+    # Adiciona atributos SameSite e Secure aos cookies
+    cookies = response.headers.getlist('Set-Cookie')
+    response.headers['Set-Cookie'] = '; '.join(
+        cookie + '; SameSite=Lax; Secure' if 'SameSite' not in cookie else cookie
+        for cookie in cookies
+    )
     return response
 
 @bp.route('/auth-status', methods=['GET'])
@@ -34,13 +40,6 @@ def auth_status():
     else:
         return jsonify({'loggedIn': False}), 200
 
-@bp.route('/logout', methods=['POST'])
-def logout():
-    # To log out, just delete the token on the client-side and unset cookies
-    response = jsonify({'status': 'Logged out successfully'})
-    unset_jwt_cookies(response)
-    return response, 200
-
 @bp.route('/login')
 def battle_net_login():
     state = secrets.token_urlsafe()
@@ -49,6 +48,12 @@ def battle_net_login():
         f"&redirect_uri={Config.BASE_URL}/callback&response_type=code"
         f"&scope=openid&state={state}"
     )
+
+@bp.route('/logout', methods=['POST'])
+def logout():
+    response = jsonify({'status': 'Logged out successfully'})
+    unset_jwt_cookies(response)
+    return response, 200
 
 @bp.route('/callback')
 def callback():
@@ -66,13 +71,11 @@ def callback():
     }
 
     try:
-        # Obtém o token de acesso usando o código de autorização
         response = requests.post(Config.OAUTH_TOKEN_URL, data=payload)
         response.raise_for_status()
         token_data = response.json()
         access_token = token_data.get('access_token')
 
-        # Obtém as informações do usuário usando o token de acesso
         user_info_response = requests.get(Config.OAUTH_USERINFO_URL, headers={'Authorization': f'Bearer {access_token}'})
         user_info_response.raise_for_status()
         user_info = user_info_response.json()
@@ -88,12 +91,11 @@ def callback():
         db.session.add(new_user)
         db.session.commit()
 
-    # Cria um token de acesso para o usuário
     jwt_token = create_access_token(identity={'user_info': user_info})
 
-    # Redireciona para a página inicial com o token como um cookie
     response = redirect(url_for('main.index'))
-    set_access_cookies(response, jwt_token)
+    # Configura o cookie JWT com SameSite e Secure
+    set_access_cookies(response, jwt_token, max_age=3600, samesite='Lax', secure=True)
     return response
 
 @bp.route('/')
