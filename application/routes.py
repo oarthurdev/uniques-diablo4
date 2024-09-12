@@ -102,8 +102,7 @@ def callback():
         jwt_token,
         httponly=True,
         samesite='Lax',
-        secure=True,
-        max_age=3600
+        secure=True
     )
 
     return response
