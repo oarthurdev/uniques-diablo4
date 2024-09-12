@@ -1,6 +1,6 @@
-from flask import Blueprint, request, jsonify, redirect, session, url_for, render_template, Response, abort, make_response
+from flask import Blueprint, request, jsonify, redirect, session, url_for, render_template, Response, abort
 import requests
-from flask_jwt_extended import create_access_token, decode_token, jwt_required, get_jwt_identity, unset_jwt_cookies, set_access_cookies
+from flask_jwt_extended import create_access_token, decode_token, jwt_required, get_jwt_identity
 from .utils import fetch_data_with_retry, save_data_to_file, load_data_from_file
 from .models import db, User, Favorite
 from .config import Config
@@ -23,7 +23,7 @@ def auth_status():
     if user_identity is None:
         return jsonify({'loggedIn': False}), 200
     
-    user_id = user_identity.get('user_id')
+    user_id = user_identity.get('user_info', {}).get('id')
     user = User.query.get(user_id)
     
     if user:
@@ -37,7 +37,7 @@ def auth_status():
 @bp.route('/logout', methods=['POST'])
 def logout():
     response = jsonify({'status': 'Logged out successfully'})
-    unset_jwt_cookies(response)
+    # No more cookie removal
     return response, 200
 
 @bp.route('/login')
@@ -89,7 +89,7 @@ def callback():
     existing_user = User.query.get(user_id)
 
     if not existing_user:
-        new_user = User(id=user_id, data=user_info, jwt_token='')  # Cria o usuário com um token vazio
+        new_user = User(id=user_id, data=user_info, jwt_token='')
         db.session.add(new_user)
         db.session.commit()
         existing_user = new_user
@@ -98,21 +98,12 @@ def callback():
     existing_user.jwt_token = jwt_token  # Atualiza o token JWT no banco de dados
     db.session.commit()
 
-    response = make_response(redirect(url_for('main.index')))
-    response.set_cookie(
-        'access_token_cookie',
-        jwt_token,
-        httponly=True,
-        secure=True,
-        max_age=60*60*24*7  # 7 dias
-    )
+    return redirect(url_for('main.index'))
 
-    return response
-
-def get_jwt_token_from_header():
-    auth_header = request.headers.get('Authorization', None)
-    if auth_header and auth_header.startswith('Bearer '):
-        return auth_header[len('Bearer '):]
+def get_jwt_token_from_db(user_id):
+    user = User.query.get(user_id)
+    if user and user.jwt_token:
+        return user.jwt_token
     return None
 
 @bp.route('/')
@@ -140,24 +131,30 @@ def index():
     user_info = None
     favorites = []
 
-    token = request.cookies.get('access_token_cookie')
-    if not token:
-        # Verifica o token no banco de dados se não estiver no cookie
-        user_id = request.args.get('user_id')
-        if user_id:
-            user = User.query.get(user_id)
-            if user and user.jwt_token:
-                token = user.jwt_token
+    # Use the user_id from the request args or a JWT token from the database
+    user_id = request.args.get('user_id')
+    if not user_id:
+        token = get_jwt_token_from_header()
+        if token:
+            try:
+                decoded_token = decode_token(token)
+                sub = decoded_token.get('sub')
+                if sub and 'user_info' in sub:
+                    user_id = sub['user_info']['id']
+            except Exception as e:
+                print(f"Error extracting user info: {e}")
 
-    if token:
-        try:
-            decoded_token = decode_token(token)
-            sub = decoded_token.get('sub')
-            if sub and 'user_info' in sub:
-                user_info = {'id': sub['user_info']['id'], 'battletag': sub['user_info']['battletag']}
-                favorites = [fav.item_name for fav in Favorite.query.filter_by(user_id=sub['user_info']['id']).all()]
-        except Exception as e:
-            print(f"Error extracting user info: {e}")
+    if user_id:
+        token = get_jwt_token_from_db(user_id)
+        if token:
+            try:
+                decoded_token = decode_token(token)
+                sub = decoded_token.get('sub')
+                if sub and 'user_info' in sub:
+                    user_info = {'id': sub['user_info']['id'], 'battletag': sub['user_info']['battletag']}
+                    favorites = [fav.item_name for fav in Favorite.query.filter_by(user_id=sub['user_info']['id']).all()]
+            except Exception as e:
+                print(f"Error extracting user info: {e}")
 
     return render_template(
         'index.html',
@@ -175,14 +172,11 @@ def index():
 @jwt_required()
 def add_favorite():
     data = request.json
-    print(data)
     item_name = data.get('item_name')
     token = get_jwt_token_from_header()
 
-    print(token)
     if token:
         decoded_token = decode_token(token)
-        
         sub = decoded_token.get('sub')
         user_id = sub['user_info']['id']
         
@@ -201,7 +195,7 @@ def add_favorite():
 def remove_favorite():
     data = request.json
     item_name = data.get('item_name')
-    token = get_jwt_token_from_header()
+    token = get_jwt_token_from_db()
 
     if token:
         decoded_token = decode_token(token)
