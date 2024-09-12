@@ -99,6 +99,12 @@ def callback():
     )
     return response
 
+def get_jwt_token_from_header():
+    auth_header = request.headers.get('Authorization', None)
+    if auth_header and auth_header.startswith('Bearer '):
+        return auth_header[len('Bearer '):]
+    return None
+
 @bp.route('/')
 @jwt_required(optional=True)
 def index():
@@ -152,7 +158,7 @@ def index():
 def add_favorite():
     data = request.json
     item_name = data.get('item_name')
-    token = request.cookies.get('access_token_cookie')
+    token = get_jwt_token_from_header()
 
     print(token)
     if token:
@@ -176,7 +182,7 @@ def add_favorite():
 def remove_favorite():
     data = request.json
     item_name = data.get('item_name')
-    token = request.cookies.get('access_token_cookie')
+    token = get_jwt_token_from_header()
 
     if token:
         decoded_token = decode_token(token)
