@@ -100,12 +100,12 @@ def callback():
     response.set_cookie(
         'access_token_cookie',
         jwt_token,
-        httponly=False,
+        httponly=True,
         samesite='Lax',
         secure=True,
         max_age=3600
     )
-    
+
     return response
 
 def get_jwt_token_from_header():
