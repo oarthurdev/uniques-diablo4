@@ -101,7 +101,6 @@ def callback():
         'access_token_cookie',
         jwt_token,
         httponly=True,
-        samesite='Lax',
         secure=True
     )
 
