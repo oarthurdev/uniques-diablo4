@@ -174,7 +174,7 @@
 <body>
     <!-- Header with Battle Tag, Profile Image, and Logout Button -->
     <div class="header">
-        {% if token}
+        {% if token %}
             {% if user_info %}
                 <span class="battle-tag">{{ user_info.battletag }}</span>
                 <form action="{{ url_for('main.logout') }}" method="POST" style="margin: 0;">
