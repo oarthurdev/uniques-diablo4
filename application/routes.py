@@ -85,7 +85,6 @@ def callback():
         'access_token_cookie',
         jwt_token,
         httponly=False,
-        secure=True,
         max_age=3600
     )
     return response
