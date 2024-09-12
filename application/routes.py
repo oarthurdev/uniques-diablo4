@@ -100,9 +100,12 @@ def callback():
     response.set_cookie(
         'access_token_cookie',
         jwt_token,
-        httponly=False,  # Ensure that HttpOnly is set to False
+        httponly=False,
+        samesite='Lax',
+        secure=True,
         max_age=3600
     )
+    
     return response
 
 def get_jwt_token_from_header():
@@ -136,17 +139,16 @@ def index():
     user_info = None
     favorites = []
 
-    try:
-        token = request.cookies.get('access_token_cookie')
-        if token:
+    token = request.cookies.get('access_token_cookie')
+    if token:
+        try:
             decoded_token = decode_token(token)
             sub = decoded_token.get('sub')
-            if sub['user_info']:
+            if sub and 'user_info' in sub:
                 user_info = {'id': sub['user_info']['id'], 'battletag': sub['user_info']['battletag']}
-                session['user_info'] = user_info
                 favorites = [fav.item_name for fav in Favorite.query.filter_by(user_id=sub['user_info']['id']).all()]
-    except Exception as e:
-        print(f"Error extracting user info: {e}")
+        except Exception as e:
+            print(f"Error extracting user info: {e}")
 
     return render_template(
         'index.html',
@@ -156,7 +158,7 @@ def index():
         filter_name=filter_name,
         page=page,
         total_pages=total_pages,
-        user_info=session.get('user_info'),
+        user_info=user_info,
         favorites=favorites
     )
 
