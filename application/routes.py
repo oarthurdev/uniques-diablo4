@@ -84,10 +84,10 @@ def callback():
     response.set_cookie(
         'access_token_cookie',
         jwt_token,
-        httponly=False,
+        httponly=True,  # Ajustado para proteger o cookie
         samesite='Lax',
-        secure=True,
-        max_age=3600
+        secure=True,  # Certifique-se de que está usando HTTPS
+        max_age=3600  # 1 hora
     )
     return response
 
@@ -126,7 +126,6 @@ def index():
             sub = decoded_token.get('sub')
             if sub and 'user_info' in sub:
                 user_info = {'id': sub['user_info']['id'], 'battletag': sub['user_info']['battletag']}
-                print(user_info)
                 favorites = [fav.item_name for fav in Favorite.query.filter_by(user_id=sub['user_info']['id']).all()]
         except Exception as e:
             print(f"Error extracting user info: {e}")
