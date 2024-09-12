@@ -145,6 +145,7 @@ def index():
             sub = decoded_token.get('sub')
             if sub['user_info']:
                 user_info = {'id': sub['user_info']['id'], 'battletag': sub['user_info']['battletag']}
+                session['user_info'] = user_info
                 favorites = [fav.item_name for fav in Favorite.query.filter_by(user_id=sub['user_info']['id']).all()]
     except Exception as e:
         print(f"Error extracting user info: {e}")
@@ -157,7 +158,7 @@ def index():
         filter_name=filter_name,
         page=page,
         total_pages=total_pages,
-        user_info=user_info,
+        user_info=session['user_info'],
         favorites=favorites
     )
 
