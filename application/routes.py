@@ -157,6 +157,7 @@ def index():
 @jwt_required()
 def add_favorite():
     data = request.json
+    print(data)
     item_name = data.get('item_name')
     token = get_jwt_token_from_header()
 
