@@ -36,9 +36,9 @@ def auth_status():
 
 @bp.route('/logout', methods=['POST'])
 def logout():
-    response = redirect(url_for('main.index'))
+    response = jsonify({'status': 'Logged out successfully'})
     unset_jwt_cookies(response)
-    return response, 200
+    return redirect(url_for('main.index'))
 
 @bp.route('/login')
 def battle_net_login():
