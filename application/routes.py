@@ -18,13 +18,14 @@ def add_header(response):
 @bp.route('/check_auth', methods=['GET'])
 @jwt_required()
 def check_auth():
-    user_identity = get_jwt_identity()
+    token = get_jwt_token_from_header()
     
-    print(user_identity)
-    if user_identity is None:
+    if token is None:
         return jsonify({'loggedIn': False}), 200
     
-    user_id = user_identity.get('user_id')
+    decoded_token = decode_token(token)
+    sub = decoded_token.get('sub')
+    user_id = sub['user_info']['id']
     user = User.query.get(user_id)
     
     if user:
