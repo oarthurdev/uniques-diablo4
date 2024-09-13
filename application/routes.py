@@ -24,6 +24,7 @@ def check_auth():
         return jsonify({'loggedIn': False}), 200
     
     decoded_token = decode_token(token)
+    print(decoded_token)
     sub = decoded_token.get('sub')
     user_id = sub['user_info']['id']
     user = User.query.get(user_id)
