@@ -264,7 +264,7 @@
             fetch('{{ url_for('main.check_auth') }}', { credentials: 'include' })
                 .then(response => response.json())
                 .then(data => {
-                    console.log(data)
+                    console.log(response)
                     if (data.loggedIn) {
                         document.querySelector('.login-btn').style.display = 'none';
                         document.querySelector('.logout-btn').style.display = 'inline-block';
