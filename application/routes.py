@@ -161,7 +161,6 @@ def add_favorite():
     item_name = data.get('item_name')
     token = request.cookies.get('access_token_cookie')
 
-    print(token)
     if token:
         decoded_token = decode_token(token)
         sub = decoded_token.get('sub')

@@ -263,7 +263,6 @@
         const access_token = getCookie('access_token_cookie');
 
         document.addEventListener("DOMContentLoaded", function() {
-            console.log('All cookies:', document.cookie);
             const logoutBtn2 = document.getElementById('logout-btn');
 
             if (logoutBtn2) {
@@ -517,6 +516,9 @@
                 console.error('Error in fetch:', error);
             });
         }
+
+        // Debugging: Log all cookies
+        console.log('All cookies:', document.cookie);
 
         function updateFavoriteButtons() {
             document.querySelectorAll('.favorite-btn').forEach(button => {
