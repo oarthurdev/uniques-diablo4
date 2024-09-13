@@ -9,6 +9,8 @@ import logging
 
 bp = Blueprint('main', __name__)
 
+# Funções auxiliares
+
 def generate_token(user_info):
     """
     Gera um token JWT para o usuário.
@@ -157,15 +159,22 @@ def index():
 @bp.route('/add_favorite', methods=['POST'])
 @jwt_required()
 def add_favorite():
-    data = request.json
-    item_name = data.get('item_name')
-    token = request.cookies.get('access_token_cookie')
+    auth_header = request.headers.get('Authorization')
+    if auth_header and auth_header.startswith('Bearer '):
+        token = auth_header.split(' ')[1]
+    else:
+        return jsonify({'error': 'Authorization header missing or malformed', 'success': False}), 401
 
-    if token:
+    try:
         decoded_token = decode_token(token)
         sub = decoded_token.get('sub')
         user_id = sub['user_info']['id']
-        
+    except Exception as e:
+        return jsonify({'error': 'Invalid or expired token', 'success': False}), 401
+
+    data = request.json
+    item_name = data.get('item_name')
+
     if not item_name:
         return jsonify({'error': 'Item name is required', 'success': False}), 400
 
@@ -179,14 +188,21 @@ def add_favorite():
 @bp.route('/remove_favorite', methods=['POST'])
 @jwt_required()
 def remove_favorite():
-    data = request.json
-    item_name = data.get('item_name')
-    token = request.cookies.get('access_token_cookie')
+    auth_header = request.headers.get('Authorization')
+    if auth_header and auth_header.startswith('Bearer '):
+        token = auth_header.split(' ')[1]
+    else:
+        return jsonify({'error': 'Authorization header missing or malformed', 'success': False}), 401
 
-    if token:
+    try:
         decoded_token = decode_token(token)
         sub = decoded_token.get('sub')
         user_id = sub['user_info']['id']
+    except Exception as e:
+        return jsonify({'error': 'Invalid or expired token', 'success': False}), 401
+
+    data = request.json
+    item_name = data.get('item_name')
 
     if not item_name:
         return jsonify({'error': 'Item name is required', 'success': False}), 400
