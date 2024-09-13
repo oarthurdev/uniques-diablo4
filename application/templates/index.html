@@ -263,19 +263,22 @@
         const access_token = getCookie('access_token_cookie');
 
         document.addEventListener("DOMContentLoaded", function() {
-            fetch('{{ url_for('main.check_auth') }}', { 
-                credentials: 'include',
-                headers: {
-                    'Authorization': 'Bearer ' + access_token
-                }
-            })
-                .then(response => response.json())
-                .then(data => {
-                    console.log(data);
-                    const loginBtn = document.querySelector('.login-btn');
-                    const logoutBtn = document.querySelector('.logout-btn');
-                    
-                    if (loginBtn && logoutBtn) {
+            const loginBtn = document.querySelector('.login-btn');
+            const logoutBtn = document.querySelector('.logout-btn');
+            
+            console.log('Login Button:', loginBtn);
+            console.log('Logout Button:', logoutBtn);
+            
+            if (loginBtn && logoutBtn) {
+                fetch('{{ url_for('main.check_auth') }}', { 
+                    credentials: 'include',
+                    headers: {
+                        'Authorization': 'Bearer ' + access_token
+                    }
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log(data);
                         if (data.loggedIn) {
                             loginBtn.style.display = 'none';
                             logoutBtn.style.display = 'inline-block';
@@ -283,15 +286,15 @@
                             loginBtn.style.display = 'inline-block';
                             logoutBtn.style.display = 'none';
                         }
-                    } else {
-                        console.warn('One or both of the buttons are not present in the DOM.');
-                    }
-                });
+                    });
+            } else {
+                console.warn('Um ou ambos os botões não foram encontrados.');
+            }
 
-            const logoutBtn = document.getElementById('logout-btn');
+            const logoutBtn2 = document.getElementById('logout-btn');
 
-            if (logoutBtn) {
-                logoutBtn.addEventListener('click', function() {
+            if (logoutBtn2) {
+                logoutBtn2.addEventListener('click', function() {
                     // Obtenha o token de acesso dos cookies
                     const accessToken = getCookie('access_token_cookie');
                     
