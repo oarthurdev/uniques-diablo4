@@ -17,7 +17,7 @@ def add_header(response):
 
 @bp.route('/check_auth', methods=['GET'])
 @jwt_required(optional=True)
-def auth_status():
+def check_auth():
     token = request.cookies.get('access_token_cookie')
     
     if token is None:
@@ -27,7 +27,7 @@ def auth_status():
         
     sub = decoded_token.get('sub')
     user_id = sub['user_info']['id']
-    
+
     user = User.query.get(user_id)
     
     if user:
