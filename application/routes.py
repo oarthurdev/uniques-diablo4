@@ -30,6 +30,7 @@ def check_auth():
         if jwt_data and user_identity:
             user_info = user_identity.get('user_info')
             user_id = user_info.get('id')
+            print(user_id)
             user = User.query.get(user_id)
             
             if user:
