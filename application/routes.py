@@ -31,27 +31,6 @@ def add_header(response):
     response.headers['Expires'] = '0'
     return response
 
-@bp.route('/check_auth', methods=['GET'])
-@jwt_required()
-def check_auth():
-    try:
-        user_identity = get_jwt_identity()
-        user_info = user_identity.get('user_info')
-        user_id = user_info.get('id')
-        user = User.query.get(user_id)
-        
-        if user:
-            return jsonify({
-                'loggedIn': True,
-                'battleTag': user.data.get('battletag', 'Desconhecido')
-            }), 200
-        else:
-            return jsonify({'loggedIn': False}), 200
-
-    except Exception as e:
-        logging.error(f"Erro ao verificar o token: {e}")
-        return jsonify({'loggedIn': False}), 200
-
 @bp.route('/logout', methods=['POST'])
 def logout():
     response = jsonify({'status': 'Logged out successfully'})

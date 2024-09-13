@@ -175,7 +175,7 @@
     <!-- Header with Battle Tag, Profile Image, and Logout Button -->
     <div class="header">
         {% if user_info %}
-            <span id="battle-tag" class="battle-tag">Loading ...</span>
+            <span id="battle-tag" class="battle-tag">{{user_info.battletag}}</span>
             <form action="{{ url_for('main.logout') }}" method="POST" style="margin: 0;">
                 <button id="logout-btn" class="logout-btn" aria-label="Logout">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-log-out">
@@ -263,26 +263,6 @@
         const access_token = getCookie('access_token_cookie');
 
         document.addEventListener("DOMContentLoaded", function() {
-            fetch('{{ url_for('main.check_auth') }}', { 
-                credentials: 'include',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if(data.battleTag) {
-                        const battleTagUser = data.battleTag;
-
-                        // Atualiza o conteúdo do elemento com o battleTag
-                        document.getElementById('battle-tag').textContent = battleTagUser;
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching auth_check route: ', error);
-                });
-            
-
             const logoutBtn2 = document.getElementById('logout-btn');
 
             if (logoutBtn2) {
