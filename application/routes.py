@@ -33,7 +33,7 @@ def check_auth():
     if user:
         return jsonify({
             'loggedIn': True,
-            'battleTag': user.data.get('battletag', 'Desconhecido')
+            'battleTag': user.data.get('battleTag', 'Desconhecido')
         }), 200
     else:
         return jsonify({'loggedIn': False}), 200
