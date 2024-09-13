@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify, redirect, session, url_for, render_template, Response, abort, make_response
 import requests
 from flask_jwt_extended import create_access_token, decode_token, jwt_required, get_jwt_identity, unset_jwt_cookies, set_access_cookies, get_jwt
-from .utils import fetch_data_with_retry, save_data_to_file, load_data_from_file, decode_token
+from .utils import fetch_data_with_retry, save_data_to_file, load_data_from_file
 from .models import db, User, Favorite
 from .config import Config
 import secrets
