@@ -1,10 +1,11 @@
 from flask import Blueprint, request, jsonify, redirect, session, url_for, render_template, Response, abort, make_response
 import requests
-from flask_jwt_extended import create_access_token, decode_token, jwt_required, get_jwt_identity, unset_jwt_cookies, set_access_cookies
+from flask_jwt_extended import create_access_token, decode_token, jwt_required, get_jwt_identity, unset_jwt_cookies, set_access_cookies, get_jwt
 from .utils import fetch_data_with_retry, save_data_to_file, load_data_from_file, decode_token
 from .models import db, User, Favorite
 from .config import Config
 import secrets
+import logging
 
 bp = Blueprint('main', __name__)
 
@@ -18,23 +19,30 @@ def add_header(response):
 @bp.route('/check_auth', methods=['GET'])
 @jwt_required()
 def check_auth():
-    token = get_jwt_token_from_header()
-    
-    if token is None:
-        return jsonify({'loggedIn': False}), 200
-    
-    decoded_token = decode_token(token)
-    print(decoded_token)
-    sub = decoded_token.get('sub')
-    user_id = sub['user_info']['id']
-    user = User.query.get(user_id)
-    
-    if user:
-        return jsonify({
-            'loggedIn': True,
-            'battleTag': user.data.get('battletag', 'Desconhecido')
-        }), 200
-    else:
+    try:
+        # Obtém o token JWT do cabeçalho
+        jwt_data = get_jwt()
+        
+        # Obtém a identidade do usuário a partir do token
+        user_identity = get_jwt_identity()
+        
+        # Verifica se o JWT está presente e se a identidade do usuário foi extraída
+        if jwt_data and user_identity:
+            user_id = user_identity.get('id')
+            user = User.query.get(user_id)
+            
+            if user:
+                return jsonify({
+                    'loggedIn': True,
+                    'battleTag': user.data.get('battletag', 'Desconhecido')
+                }), 200
+            else:
+                return jsonify({'loggedIn': False}), 200
+        else:
+            return jsonify({'loggedIn': False}), 200
+
+    except Exception as e:
+        logging.error(f"Erro ao verificar o token: {e}")
         return jsonify({'loggedIn': False}), 200
 
 @bp.route('/logout', methods=['POST'])
