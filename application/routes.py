@@ -159,12 +159,11 @@ def index():
 @bp.route('/add_favorite', methods=['POST'])
 def add_favorite():
     auth_header = request.headers.get('Authorization')
-    print(auth_header)
     if auth_header and auth_header.startswith('Bearer '):
         token = auth_header.split(' ')[1]
     else:
         return jsonify({'error': 'Authorization header missing or malformed', 'success': False}), 401
-
+    print(token)
     try:
         decoded_token = decode_token(token)
         sub = decoded_token.get('sub')
