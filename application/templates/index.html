@@ -261,6 +261,19 @@
         let favorites = new Set({{ favorites | tojson | safe }}.map(item => item.toLowerCase()));
     
         document.addEventListener("DOMContentLoaded", function() {
+            fetch('{{ url_for('main.check_auth') }}', { credentials: 'include' })
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data)
+                    if (data.loggedIn) {
+                        document.querySelector('.login-btn').style.display = 'none';
+                        document.querySelector('.logout-btn').style.display = 'inline-block';
+                    } else {
+                        document.querySelector('.login-btn').style.display = 'inline-block';
+                        document.querySelector('.logout-btn').style.display = 'none';
+                    }
+                });
+
             const logoutBtn = document.getElementById('logout-btn');
 
             if (logoutBtn) {

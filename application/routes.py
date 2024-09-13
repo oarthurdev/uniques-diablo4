@@ -15,15 +15,19 @@ def add_header(response):
     response.headers['Expires'] = '0'
     return response
 
-@bp.route('/auth-status', methods=['GET'])
+@bp.route('/check_auth', methods=['GET'])
 @jwt_required(optional=True)
 def auth_status():
-    user_identity = get_jwt_identity()
+    token = request.cookies.get('access_token_cookie')
     
-    if user_identity is None:
+    if token is None:
         return jsonify({'loggedIn': False}), 200
     
-    user_id = user_identity.get('user_id')
+    decoded_token = decode_token(token)
+        
+    sub = decoded_token.get('sub')
+    user_id = sub['user_info']['id']
+    
     user = User.query.get(user_id)
     
     if user:
