@@ -26,11 +26,11 @@ def check_auth():
         # Obtém a identidade do usuário a partir do token
         user_identity = get_jwt_identity()
         
+        print(jwt_data)
+        print(user_identity)
         # Verifica se o JWT está presente e se a identidade do usuário foi extraída
         if jwt_data and user_identity:
-            user_info = user_identity.get('user_info')
-            user_id = user_info.get('id')
-            print(user_info)
+            user_id = user_identity.get('id')
             user = User.query.get(user_id)
             
             if user:
