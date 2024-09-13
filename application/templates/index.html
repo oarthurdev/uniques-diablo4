@@ -175,7 +175,7 @@
     <!-- Header with Battle Tag, Profile Image, and Logout Button -->
     <div class="header">
         {% if user_info %}
-            <span class="battle-tag">{{ user_info.battletag }}</span>
+            <span class="battle-tag">{{ battleTagUser }}</span>
             <form action="{{ url_for('main.logout') }}" method="POST" style="margin: 0;">
                 <button id="logout-btn" class="logout-btn" aria-label="Logout">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-log-out">
@@ -263,33 +263,17 @@
         const access_token = getCookie('access_token_cookie');
 
         document.addEventListener("DOMContentLoaded", function() {
-            const loginBtn = document.querySelector('.login-btn');
-            const logoutBtn = document.querySelector('.logout-btn');
+            fetch('{{ url_for('main.check_auth') }}', { 
+                credentials: 'include',
+                headers: {
+                    'Authorization': 'Bearer ' + access_token
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    const battleTagUser = data.battletag
+                });
             
-            console.log('Login Button:', loginBtn);
-            console.log('Logout Button:', logoutBtn);
-            
-            if (loginBtn || logoutBtn) {
-                fetch('{{ url_for('main.check_auth') }}', { 
-                    credentials: 'include',
-                    headers: {
-                        'Authorization': 'Bearer ' + access_token
-                    }
-                })
-                    .then(response => response.json())
-                    .then(data => {
-                        console.log(data);
-                        if (data.loggedIn) {
-                            loginBtn.style.display = 'none';
-                            logoutBtn.style.display = 'inline-block';
-                        } else {
-                            loginBtn.style.display = 'inline-block';
-                            logoutBtn.style.display = 'none';
-                        }
-                    });
-            } else {
-                console.warn('Um ou ambos os botões não foram encontrados.');
-            }
 
             const logoutBtn2 = document.getElementById('logout-btn');
 

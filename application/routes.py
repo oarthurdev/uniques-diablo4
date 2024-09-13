@@ -180,7 +180,6 @@ def index():
         filter_name=filter_name,
         page=page,
         total_pages=total_pages,
-        user_info=user_info,
         favorites=favorites
     )
 
