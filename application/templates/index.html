@@ -278,6 +278,9 @@
                         // Atualiza o conteúdo do elemento com o battleTag
                         document.getElementById('battle-tag').textContent = battleTagUser;
                     }
+                })
+                .catch(error => {
+                    console.error('Error fetching auth_check route: ', error);
                 });
             
 
