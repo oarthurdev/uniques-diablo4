@@ -115,10 +115,10 @@ def callback():
     response.set_cookie(
         'access_token_cookie',
         jwt_token,
-        httponly=False,
-        samesite="Lax",
-        secure=True,
-        max_age=60*60*24*7  # 7 dias
+        httponly=True,  # Make sure the cookie is only accessible via HTTP
+        samesite='Lax',  # Ensures the cookie is sent only for same-site requests
+        secure=True,  # Cookie will only be sent over HTTPS
+        max_age=60*60*24*7  # 7 days
     )
 
     return response
@@ -155,14 +155,6 @@ def index():
     favorites = []
 
     token = request.cookies.get('access_token_cookie')
-    if not token:
-        # Verifica o token no banco de dados se não estiver no cookie
-        user_id = request.args.get('user_id')
-        if user_id:
-            user = User.query.get(user_id)
-            if user and user.jwt_token:
-                token = user.jwt_token
-
     if token:
         try:
             decoded_token = decode_token(token)
