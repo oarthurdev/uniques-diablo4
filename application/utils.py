@@ -28,10 +28,3 @@ def load_data_from_file():
         with open(app.config['JSON_FILE_PATH'], 'r') as file:
             return json.load(file)
     return []
-
-def decode_token(token):
-    try:
-        return decode_token(token, app.config['JWT_SECRET_KEY'])
-    except Exception as e:
-        print(f"Erro ao decodificar o token: {e}")
-        return None
