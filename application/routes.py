@@ -9,6 +9,21 @@ import logging
 
 bp = Blueprint('main', __name__)
 
+def generate_token(user_info):
+    """
+    Gera um token JWT para o usuário.
+    """
+    return create_access_token(identity={'user_info': user_info})
+
+def save_token_to_db(user_id, token):
+    """
+    Salva o token JWT no banco de dados.
+    """
+    user = User.query.get(user_id)
+    if user:
+        user.jwt_token = token
+        db.session.commit()
+
 @bp.after_request
 def add_header(response):
     response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
@@ -20,26 +35,16 @@ def add_header(response):
 @jwt_required()
 def check_auth():
     try:
-        # Obtém o token JWT do cabeçalho
-        jwt_data = get_jwt()
-        
-        # Obtém a identidade do usuário a partir do token
         user_identity = get_jwt_identity()
-        
         user_info = user_identity.get('user_info')
-
-        # Verifica se o JWT está presente e se a identidade do usuário foi extraída
-        if jwt_data and user_identity:
-            user_id = user_info.get('id')
-            user = User.query.get(user_id)
-            
-            if user:
-                return jsonify({
-                    'loggedIn': True,
-                    'battleTag': user.data.get('battletag', 'Desconhecido')
-                }), 200
-            else:
-                return jsonify({'loggedIn': False}), 200
+        user_id = user_info.get('id')
+        user = User.query.get(user_id)
+        
+        if user:
+            return jsonify({
+                'loggedIn': True,
+                'battleTag': user.data.get('battletag', 'Desconhecido')
+            }), 200
         else:
             return jsonify({'loggedIn': False}), 200
 
@@ -55,8 +60,8 @@ def logout():
 
 @bp.route('/login')
 def battle_net_login():
-    state = secrets.token_urlsafe()  # Gera um estado seguro
-    session['oauth_state'] = state  # Armazena o estado na sessão
+    state = secrets.token_urlsafe()
+    session['oauth_state'] = state
     client_id = '61903ba666634e469e7b4977be4972f4'
     redirect_uri = url_for('main.callback', _external=True)
     scope = 'openid'
@@ -102,32 +107,25 @@ def callback():
     existing_user = User.query.get(user_id)
 
     if not existing_user:
-        new_user = User(id=user_id, data=user_info, jwt_token='')  # Cria o usuário com um token vazio
+        new_user = User(id=user_id, data=user_info, jwt_token='')  
         db.session.add(new_user)
         db.session.commit()
         existing_user = new_user
 
-    jwt_token = create_access_token(identity={'user_info': user_info})
-    existing_user.jwt_token = jwt_token  # Atualiza o token JWT no banco de dados
-    db.session.commit()
+    jwt_token = generate_token(user_info)
+    save_token_to_db(user_id, jwt_token)
 
     response = make_response(redirect(url_for('main.index')))
     response.set_cookie(
         'access_token_cookie',
         jwt_token,
-        httponly=False,  # Make sure the cookie is only accessible via HTTP
-        samesite='Lax',  # Ensures the cookie is sent only for same-site requests
-        secure=True,  # Cookie will only be sent over HTTPS
-        max_age=60*60*24*7  # 7 days
+        httponly=True,  # Cookie apenas acessível via HTTP
+        samesite='Lax',
+        secure=True,
+        max_age=60*60*24*7  # 7 dias
     )
 
     return response
-
-def get_jwt_token_from_header():
-    auth_header = request.headers.get('Authorization', None)
-    if auth_header and auth_header.startswith('Bearer '):
-        return auth_header[len('Bearer '):]
-    return None
 
 @bp.route('/')
 @jwt_required(optional=True)
@@ -181,14 +179,11 @@ def index():
 @jwt_required()
 def add_favorite():
     data = request.json
-    print(data)
     item_name = data.get('item_name')
-    token = get_jwt_token_from_header()
+    token = request.cookies.get('access_token_cookie')
 
-    print(token)
     if token:
         decoded_token = decode_token(token)
-        
         sub = decoded_token.get('sub')
         user_id = sub['user_info']['id']
         
@@ -207,7 +202,7 @@ def add_favorite():
 def remove_favorite():
     data = request.json
     item_name = data.get('item_name')
-    token = get_jwt_token_from_header()
+    token = request.cookies.get('access_token_cookie')
 
     if token:
         decoded_token = decode_token(token)
