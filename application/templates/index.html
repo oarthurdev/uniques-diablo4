@@ -260,8 +260,15 @@
         let total_pages = {{ total_pages }};
         let favorites = new Set({{ favorites | tojson | safe }}.map(item => item.toLowerCase()));
     
+        const access_token = getCookie('access_token_cookie');
+
         document.addEventListener("DOMContentLoaded", function() {
-            fetch('{{ url_for('main.check_auth') }}', { credentials: 'include' })
+            fetch('{{ url_for('main.check_auth') }}', { 
+                credentials: 'include',
+                headers: {
+                    'Authorization': 'Bearer ' + access_token
+                }
+            })
                 .then(response => response.json())
                 .then(data => {
                     console.log(data)

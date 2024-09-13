@@ -16,24 +16,21 @@ def add_header(response):
     return response
 
 @bp.route('/check_auth', methods=['GET'])
-@jwt_required(optional=True)
+@jwt_required()
 def check_auth():
-    token = request.cookies.get('access_token_cookie')
+    user_identity = get_jwt_identity()
     
-    if token is None:
+    print(user_identity)
+    if user_identity is None:
         return jsonify({'loggedIn': False}), 200
     
-    decoded_token = decode_token(token)
-        
-    sub = decoded_token.get('sub')
-    user_id = sub['user_info']['id']
-
+    user_id = user_identity.get('user_id')
     user = User.query.get(user_id)
     
     if user:
         return jsonify({
             'loggedIn': True,
-            'battleTag': user.data.get('battleTag', 'Desconhecido')
+            'battleTag': user.data.get('battletag', 'Desconhecido')
         }), 200
     else:
         return jsonify({'loggedIn': False}), 200
