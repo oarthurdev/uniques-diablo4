@@ -160,6 +160,7 @@ def index():
 @jwt_required()
 def add_favorite():
     auth_header = request.headers.get('Authorization')
+    print(auth_header)
     if auth_header and auth_header.startswith('Bearer '):
         token = auth_header.split(' ')[1]
     else:
