@@ -271,7 +271,10 @@
             })
                 .then(response => response.json())
                 .then(data => {
-                    const battleTagUser = data.battleTag
+                    const battleTagUser = data.battleTag;
+
+                    // Atualiza o conteúdo do elemento com o battleTag
+                    document.getElementsByClassName('battle-tag').textContent = battleTagUser;
                 });
             
 
