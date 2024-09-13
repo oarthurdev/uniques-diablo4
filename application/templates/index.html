@@ -271,13 +271,20 @@
             })
                 .then(response => response.json())
                 .then(data => {
-                    console.log(data)
-                    if (data.loggedIn) {
-                        document.querySelector('.login-btn').style.display = 'none';
-                        document.querySelector('.logout-btn').style.display = 'inline-block';
+                    console.log(data);
+                    const loginBtn = document.querySelector('.login-btn');
+                    const logoutBtn = document.querySelector('.logout-btn');
+                    
+                    if (loginBtn && logoutBtn) {
+                        if (data.loggedIn) {
+                            loginBtn.style.display = 'none';
+                            logoutBtn.style.display = 'inline-block';
+                        } else {
+                            loginBtn.style.display = 'inline-block';
+                            logoutBtn.style.display = 'none';
+                        }
                     } else {
-                        document.querySelector('.login-btn').style.display = 'inline-block';
-                        document.querySelector('.logout-btn').style.display = 'none';
+                        console.warn('One or both of the buttons are not present in the DOM.');
                     }
                 });
 
