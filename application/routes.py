@@ -157,7 +157,6 @@ def index():
     )
 
 @bp.route('/add_favorite', methods=['POST'])
-@jwt_required()
 def add_favorite():
     auth_header = request.headers.get('Authorization')
     print(auth_header)
@@ -187,7 +186,6 @@ def add_favorite():
     return jsonify({'status': 'Favorite added successfully', 'success': True}), 200
 
 @bp.route('/remove_favorite', methods=['POST'])
-@jwt_required()
 def remove_favorite():
     auth_header = request.headers.get('Authorization')
     if auth_header and auth_header.startswith('Bearer '):
