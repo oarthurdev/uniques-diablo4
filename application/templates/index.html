@@ -269,7 +269,7 @@
             console.log('Login Button:', loginBtn);
             console.log('Logout Button:', logoutBtn);
             
-            if (loginBtn && logoutBtn) {
+            if (loginBtn || logoutBtn) {
                 fetch('{{ url_for('main.check_auth') }}', { 
                     credentials: 'include',
                     headers: {
