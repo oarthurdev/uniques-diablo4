@@ -1,19 +1,23 @@
-from flask import Blueprint, request, jsonify, redirect, session, url_for, make_response
+from flask import Blueprint, request, jsonify, redirect, session, url_for, render_template, Response, abort, make_response
 import requests
-from flask_jwt_extended import decode_token as flask_decode_token, create_access_token as flask_create_access_token, jwt_required, unset_jwt_cookies
+from flask_jwt_extended import decode_token, jwt_required, get_jwt_identity, unset_jwt_cookies, set_access_cookies, get_jwt, flask_create_access_token
 from .utils import fetch_data_with_retry, save_data_to_file, load_data_from_file, decode_jwt_token, create_access_token
 from .models import db, User, Favorite
 from .config import Config
 import secrets
+import logging
 
 bp = Blueprint('main', __name__)
+
+# Funções auxiliares
 
 def generate_token(user_info):
     """
     Gera um token JWT para o usuário com o campo 'sub'.
     """
+    # Incluindo o campo 'sub' no payload
     payload = {
-        'sub': user_info
+        'sub': user_info  # ou você pode ajustar conforme necessário
     }
     token = flask_create_access_token(
         identity=payload, 
@@ -141,14 +145,16 @@ def index():
     token = request.cookies.get('access_token_cookie')
     if token:
         try:
-            decoded_token = decode_jwt_token(token, Config.SECRET_KEY, Config.ALG_JWT)
-            user_info = decoded_token.get('sub')
+            decoded_token = decode_token(token)
+            user_info = decoded_token.get('user_info')
 
             if user_info:
+                # Extraia o ID e battletag do user_info
                 user_id = user_info.get('id')
                 battletag = user_info.get('battletag')
                 if user_id is not None and battletag is not None:
                     user_info = {'id': user_id, 'battletag': battletag}
+                    # Consulta favoritos do usuário
                     favorites = [fav.item_name for fav in Favorite.query.filter_by(user_id=user_id).all()]
                 else:
                     print("User info is missing required fields")
@@ -179,8 +185,8 @@ def add_favorite():
         
         try:
             decoded_token = decode_jwt_token(token, Config.SECRET_KEY, Config.ALG_JWT)
-            user_info = decoded_token.get('sub')
-            user_id = user_info.get('id')
+            sub = decoded_token.get('sub')
+            user_id = sub['user_info']['id']
         except KeyError as e:
             print(f"KeyError: {str(e)}")
             return jsonify({'error': 'Invalid token structure', 'success': False}), 401
@@ -212,9 +218,9 @@ def remove_favorite():
         return jsonify({'error': 'Authorization header missing or malformed', 'success': False}), 401
 
     try:
-        decoded_token = decode_jwt_token(token, Config.SECRET_KEY, Config.ALG_JWT)
-        user_info = decoded_token.get('sub')
-        user_id = user_info.get('id')
+        decoded_token = decode_token(token)
+        sub = decoded_token.get('sub')
+        user_id = sub['user_info']['id']
     except Exception as e:
         return jsonify({'error': 'Invalid or expired token', 'success': False}), 401
 
