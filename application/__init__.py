@@ -9,6 +9,7 @@ def create_app():
     app = Flask(__name__)
     CORS(app, supports_credentials=True)
     app.config['JWT_SECRET_KEY'] = Config.SECRET_KEY  # Alterar para o seu segredo real
+    app.config['JWT_IDENTITY_CLAIM'] = 'sub'
     app.config['JWT_ACCESS_COOKIE_PATH'] = '/'  # Caminho onde o cookie é acessível
     app.config['JWT_ALGORITHM'] = 'HS256'
     app.config['JWT_COOKIE_SECURE'] = True  # Defina como True em produção se estiver usando HTTPS
