@@ -3,6 +3,7 @@ from datetime import timedelta
 
 class Config:
     SECRET_KEY = secrets.token_hex(16)  # Em produção, use variáveis de ambiente
+    ALG_JWT = ['HS256']
     SQLALCHEMY_DATABASE_URI = 'postgresql://uniques-d4_owner:6oKHsYply1ZB@ep-aged-brook-a509z7ni.us-east-2.aws.neon.tech/uniques-d4?sslmode=require'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     PERMANENT_SESSION_LIFETIME = timedelta(minutes=30)

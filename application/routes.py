@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify, redirect, session, url_for, render_template, Response, abort, make_response
 import requests
 from flask_jwt_extended import create_access_token, decode_token, jwt_required, get_jwt_identity, unset_jwt_cookies, set_access_cookies, get_jwt
-from .utils import fetch_data_with_retry, save_data_to_file, load_data_from_file
+from .utils import fetch_data_with_retry, save_data_to_file, load_data_from_file, decode_jwt_token
 from .models import db, User, Favorite
 from .config import Config
 import secrets
@@ -166,7 +166,7 @@ def add_favorite():
         return jsonify({'error': 'Authorization header missing or malformed', 'success': False}), 401
 
     try:
-        decoded_token = decode_token(token)
+        decoded_token = decode_jwt_token(token, Config.SECRET_KEY, Config.ALG_JWT)
         print(f"Decoded token: {decoded_token}")
         sub = decoded_token.get('sub')
         print(f"Sub: {sub}")
