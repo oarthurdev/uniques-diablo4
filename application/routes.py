@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify, redirect, session, url_for, render_template, Response, abort, make_response
 import requests
-from flask_jwt_extended import decode_token, jwt_required, get_jwt_identity, unset_jwt_cookies, set_access_cookies, get_jwt, create_access_token as flask_create_access_token
+from flask_jwt_extended import decode_token, jwt_required, get_jwt_identity, unset_jwt_cookies, set_access_cookies, get_jwt
 from .utils import fetch_data_with_retry, save_data_to_file, load_data_from_file, decode_jwt_token, create_access_token
 from .models import db, User, Favorite
 from .config import Config
@@ -19,8 +19,10 @@ def generate_token(user_info):
     payload = {
         'sub': user_info  # ou você pode ajustar conforme necessário
     }
-    token = flask_create_access_token(
-        identity=payload
+    token = create_access_token(
+        identity=payload, 
+        secret_key=Config.SECRET_KEY, 
+        algorithm=Config.ALG_JWT
     )
     return token
 
