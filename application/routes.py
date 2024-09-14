@@ -140,16 +140,13 @@ def index():
 
     token = request.cookies.get('access_token_cookie')
     if token:
-        try:
-            decoded_token = decode_token(token)
-            user_info_arr = decoded_token.get('user_info')
+        decoded_token = decode_token(token)
+        user_info_arr = decoded_token.get('user_info')
 
-            if user_info_arr:
-                print(user_info_arr)
-                user_info = {'id': user_info_arr['id'], 'battletag': user_info_arr['battletag']}
-                favorites = [fav.item_name for fav in Favorite.query.filter_by(user_id=user_info_arr['id']).all()]
-        except Exception as e:
-            print(f"Error extracting user info: {e}")
+        if user_info_arr:
+            print(user_info_arr)
+            user_info = {'id': user_info_arr['id'], 'battletag': user_info_arr['battletag']}
+            favorites = [fav.item_name for fav in Favorite.query.filter_by(user_id=user_info_arr['id']).all()]]
 
     return render_template(
         'index.html',
