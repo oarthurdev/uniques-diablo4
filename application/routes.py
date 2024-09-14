@@ -142,10 +142,11 @@ def index():
     if token:
         try:
             decoded_token = decode_token(token)
-            sub = decoded_token.get('sub')
-            if sub and 'user_info' in sub:
-                user_info = {'id': sub['user_info']['id'], 'battletag': sub['user_info']['battletag']}
-                favorites = [fav.item_name for fav in Favorite.query.filter_by(user_id=sub['user_info']['id']).all()]
+            user_info_arr = decoded_token.get('user_info')
+
+            if user_info_arr:
+                user_info = {'id': user_info_arr['id'], 'battletag': user_info_arr['battletag']}
+                favorites = [fav.item_name for fav in Favorite.query.filter_by(user_id=user_info_arr['id']).all()]
         except Exception as e:
             print(f"Error extracting user info: {e}")
 
