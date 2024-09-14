@@ -161,33 +161,32 @@ def add_favorite():
     auth_header = request.headers.get('Authorization')
     if auth_header and auth_header.startswith('Bearer '):
         token = auth_header.split(' ')[1]
-        print(f"Token received: {token}")
+        
+        try:
+            decoded_token = decode_jwt_token(token, Config.SECRET_KEY, Config.ALG_JWT)
+            sub = decoded_token.get('sub')
+            user_id = sub['user_info']['id']
+        except KeyError as e:
+            print(f"KeyError: {str(e)}")
+            return jsonify({'error': 'Invalid token structure', 'success': False}), 401
+        except Exception as e:
+            print(f"Error: {str(e)}")
+            return jsonify({'error': 'Invalid or expired token', 'success': False}), 401
+
+        data = request.json
+        item_name = data.get('item_name')
+
+        if not item_name:
+            return jsonify({'error': 'Item name is required', 'success': False}), 400
+
+        if not Favorite.query.filter_by(user_id=user_id, item_name=item_name).first():
+            new_favorite = Favorite(user_id=user_id, item_name=item_name)
+            db.session.add(new_favorite)
+            db.session.commit()
+
+        return jsonify({'status': 'Favorite added successfully', 'success': True}), 200
     else:
         return jsonify({'error': 'Authorization header missing or malformed', 'success': False}), 401
-
-    try:
-        decoded_token = decode_jwt_token(token, Config.SECRET_KEY, Config.ALG_JWT)
-        sub = decoded_token.get('sub')
-        user_id = sub['user_info']['id']
-    except KeyError as e:
-        print(f"KeyError: {str(e)}")
-        return jsonify({'error': 'Invalid token structure', 'success': False}), 401
-    except Exception as e:
-        print(f"Error: {str(e)}")
-        return jsonify({'error': 'Invalid or expired token', 'success': False}), 401
-
-    data = request.json
-    item_name = data.get('item_name')
-
-    if not item_name:
-        return jsonify({'error': 'Item name is required', 'success': False}), 400
-
-    if not Favorite.query.filter_by(user_id=user_id, item_name=item_name).first():
-        new_favorite = Favorite(user_id=user_id, item_name=item_name)
-        db.session.add(new_favorite)
-        db.session.commit()
-
-    return jsonify({'status': 'Favorite added successfully', 'success': True}), 200
 
 @bp.route('/remove_favorite', methods=['POST'])
 def remove_favorite():
