@@ -147,12 +147,11 @@ def index():
         try:
             decoded_token = decode_token(token)
             sub = decoded_token.get('sub')
-            user_info = sub.get('user_info')
-            
-            if user_info:
+
+            if sub:
                 # Extraia o ID e battletag do user_info
-                user_id = user_info.get('id')
-                battletag = user_info.get('battletag')
+                user_id = sub.get('id')
+                battletag = sub.get('battletag')
                 if user_id is not None and battletag is not None:
                     user_info = {'id': user_id, 'battletag': battletag}
                     # Consulta favoritos do usuário
