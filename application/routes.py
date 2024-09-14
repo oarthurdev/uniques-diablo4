@@ -161,15 +161,21 @@ def add_favorite():
     auth_header = request.headers.get('Authorization')
     if auth_header and auth_header.startswith('Bearer '):
         token = auth_header.split(' ')[1]
-        print(token)
+        print(f"Token received: {token}")
     else:
         return jsonify({'error': 'Authorization header missing or malformed', 'success': False}), 401
+
     try:
         decoded_token = decode_token(token)
-        
+        print(f"Decoded token: {decoded_token}")
         sub = decoded_token.get('sub')
+        print(f"Sub: {sub}")
         user_id = sub['user_info']['id']
+    except KeyError as e:
+        print(f"KeyError: {str(e)}")
+        return jsonify({'error': 'Invalid token structure', 'success': False}), 401
     except Exception as e:
+        print(f"Error: {str(e)}")
         return jsonify({'error': 'Invalid or expired token', 'success': False}), 401
 
     data = request.json
