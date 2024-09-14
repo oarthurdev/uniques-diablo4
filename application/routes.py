@@ -140,14 +140,26 @@ def index():
 
     token = request.cookies.get('access_token_cookie')
     if token:
-        decoded_token = decode_token(token)
-        print(decoded_token)
-        user_info_arr = decoded_token.get('user_info')
-        
-        if user_info_arr:
-            
-            user_info = {'id': user_info_arr['id'], 'battletag': user_info_arr['battletag']}
-            favorites = [fav.item_name for fav in Favorite.query.filter_by(user_id=user_info_arr['id']).all()]
+        try:
+            decoded_token = decode_token(token)
+            user_info = decoded_token.get('user_info')
+
+            if user_info:
+                # Extraia o ID e battletag do user_info
+                user_id = user_info.get('id')
+                battletag = user_info.get('battletag')
+                if user_id is not None and battletag is not None:
+                    user_info = {'id': user_id, 'battletag': battletag}
+                    # Consulta favoritos do usuário
+                    favorites = [fav.item_name for fav in Favorite.query.filter_by(user_id=user_id).all()]
+                else:
+                    print("User info is missing required fields")
+            else:
+                print("User info not found in token")
+        except Exception as e:
+            print(f"Error extracting user info: {e}")
+    else:
+        print("No token found in cookies")
 
     return render_template(
         'index.html',
