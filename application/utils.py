@@ -52,6 +52,7 @@ def decode_jwt_token(token, secret_key=None, algorithms=None):
     try:
         # Decode the JWT token
         decoded_token = jwt.decode(token, secret_key, algorithms=algorithms)
+        print(token)
         return decoded_token
     except jwt.ExpiredSignatureError:
         print("Token has expired")

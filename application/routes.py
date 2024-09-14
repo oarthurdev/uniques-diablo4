@@ -167,9 +167,7 @@ def add_favorite():
 
     try:
         decoded_token = decode_jwt_token(token, Config.SECRET_KEY, Config.ALG_JWT)
-        print(f"Decoded token: {decoded_token}")
         sub = decoded_token.get('sub')
-        print(f"Sub: {sub}")
         user_id = sub['user_info']['id']
     except KeyError as e:
         print(f"KeyError: {str(e)}")
