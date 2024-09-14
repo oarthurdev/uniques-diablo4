@@ -142,9 +142,9 @@ def index():
     if token:
         decoded_token = decode_token(token)
         user_info_arr = decoded_token.get('user_info')
-
+        print(decoded_token)
         if user_info_arr:
-            print(user_info_arr)
+            
             user_info = {'id': user_info_arr['id'], 'battletag': user_info_arr['battletag']}
             favorites = [fav.item_name for fav in Favorite.query.filter_by(user_id=user_info_arr['id']).all()]
 
