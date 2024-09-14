@@ -165,7 +165,7 @@ def add_favorite():
         return jsonify({'error': 'Authorization header missing or malformed', 'success': False}), 401
     try:
         decoded_token = decode_token(token)
-        print(decoded_token)
+        print(token)
         sub = decoded_token.get('sub')
         user_id = sub['user_info']['id']
     except Exception as e:
