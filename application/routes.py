@@ -141,8 +141,9 @@ def index():
     token = request.cookies.get('access_token_cookie')
     if token:
         decoded_token = decode_token(token)
-        user_info_arr = decoded_token.get('user_info')
         print(decoded_token)
+        user_info_arr = decoded_token.get('user_info')
+        
         if user_info_arr:
             
             user_info = {'id': user_info_arr['id'], 'battletag': user_info_arr['battletag']}
