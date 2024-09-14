@@ -20,9 +20,7 @@ def generate_token(user_info):
         'sub': user_info  # ou você pode ajustar conforme necessário
     }
     token = flask_create_access_token(
-        identity=payload, 
-        secret_key=Config.SECRET_KEY, 
-        algorithm=Config.ALG_JWT
+        identity=payload
     )
     return token
 
