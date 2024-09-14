@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify, redirect, session, url_for, render_template, Response, abort, make_response
 import requests
-from flask_jwt_extended import create_access_token, decode_token, jwt_required, get_jwt_identity, unset_jwt_cookies, set_access_cookies, get_jwt
-from .utils import fetch_data_with_retry, save_data_to_file, load_data_from_file, decode_jwt_token
+from flask_jwt_extended import decode_token, jwt_required, get_jwt_identity, unset_jwt_cookies, set_access_cookies, get_jwt
+from .utils import fetch_data_with_retry, save_data_to_file, load_data_from_file, decode_jwt_token, create_access_token
 from .models import db, User, Favorite
 from .config import Config
 import secrets
@@ -15,7 +15,12 @@ def generate_token(user_info):
     """
     Gera um token JWT para o usuário.
     """
-    return create_access_token(identity={'user_info': user_info})
+    token = create_access_token(
+        identity={'user_info': user_info}, 
+        secret_key=Config.SECRET_KEY, 
+        algorithm=Config.ALG_JWT
+    )
+    return token
 
 def save_token_to_db(user_id, token):
     """

@@ -62,3 +62,22 @@ def decode_jwt_token(token, secret_key=None, algorithms=None):
         print(f"An error occurred: {e}")
 
     return None
+
+def create_access_token(identity, secret_key=None, algorithm='HS256'):
+    """
+    Creates a JWT token.
+
+    Args:
+        identity (dict): The payload to encode into the JWT token.
+        secret_key (str, optional): The secret key used to sign the token. If None, uses the app's secret key.
+        algorithm (str, optional): The algorithm used for signing. Defaults to 'HS256'.
+
+    Returns:
+        str: The encoded JWT token.
+    """
+    if secret_key is None:
+        secret_key = app.config.get('SECRET_KEY', 'your_default_secret_key')
+
+    # Create the token
+    token = jwt.encode(identity, secret_key, algorithm=algorithm)
+    return token
