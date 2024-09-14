@@ -146,8 +146,9 @@ def index():
     if token:
         try:
             decoded_token = decode_token(token)
-            user_info = decoded_token.get('user_info')
-
+            sub = decoded_token.get('sub')
+            user_info = sub.get('user_info')
+            
             if user_info:
                 # Extraia o ID e battletag do user_info
                 user_id = user_info.get('id')
