@@ -161,11 +161,12 @@ def add_favorite():
     auth_header = request.headers.get('Authorization')
     if auth_header and auth_header.startswith('Bearer '):
         token = auth_header.split(' ')[1]
+        print(token)
     else:
         return jsonify({'error': 'Authorization header missing or malformed', 'success': False}), 401
     try:
         decoded_token = decode_token(token)
-        print(token)
+        
         sub = decoded_token.get('sub')
         user_id = sub['user_info']['id']
     except Exception as e:
