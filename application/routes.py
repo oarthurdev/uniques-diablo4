@@ -146,7 +146,7 @@ def index():
         if user_info_arr:
             print(user_info_arr)
             user_info = {'id': user_info_arr['id'], 'battletag': user_info_arr['battletag']}
-            favorites = [fav.item_name for fav in Favorite.query.filter_by(user_id=user_info_arr['id']).all()]]
+            favorites = [fav.item_name for fav in Favorite.query.filter_by(user_id=user_info_arr['id']).all()]
 
     return render_template(
         'index.html',
