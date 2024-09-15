@@ -130,15 +130,6 @@ def callback():
     save_token_to_db(user_id, jwt_token)
 
     response = make_response(redirect(url_for('main.index')))
-    response.set_cookie(
-        'access_token_cookie',
-        jwt_token,
-        httponly=False,  # Only accessible via HTTP (not JavaScript)
-        secure=True,    # Only sent over HTTPS
-        samesite='Lax', # SameSite attribute for cross-site request handling
-        max_age=60*60*24*7,  # 7 days
-        domain="uniques-diablo4.vercel.app"
-    )
     
     return response
 
@@ -168,7 +159,36 @@ def index():
     favorites = []
 
     if user_info:
-        favorites = [fav.item_name for fav in Favorite.query.filter_by(user_id=user_info['id']).all()]
+        # Retrieve JWT token from the database
+        user_id = user_info['id']
+        user = User.query.get(user_id)
+        if user and user.jwt_token:
+            # Set the access cookie with the retrieved token
+            response = make_response(render_template(
+                'index.html',
+                uniques=paginated_uniques,
+                all_classes=all_classes,
+                filter_class=filter_class,
+                filter_name=filter_name,
+                page=page,
+                total_pages=total_pages,
+                user_info=user_info,
+                favorites=favorites
+            ))
+
+            response.set_cookie(
+                'access_token_cookie',
+                user.jwt_token,
+                httponly=False,  # Only accessible via HTTP (not JavaScript)
+                secure=True,    # Only sent over HTTPS
+                samesite='Lax', # SameSite attribute for cross-site request handling
+                max_age=60*60*24*7,  # 7 days
+                domain="uniques-diablo4.vercel.app"
+            )
+            
+            return response
+
+        favorites = [fav.item_name for fav in Favorite.query.filter_by(user_id=user_id).all()]
 
     return render_template(
         'index.html',
