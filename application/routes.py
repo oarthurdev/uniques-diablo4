@@ -200,7 +200,10 @@ def add_favorite():
     return jsonify({'status': 'Favorite added successfully', 'success': True}), 200
     
 @bp.route('/remove_favorite', methods=['POST'])
+@jwt_required()
 def remove_favorite():
+    a = get_jwt_identity()
+    print("Identity: ", a)
     auth_header = request.headers.get('Authorization')
     if auth_header and auth_header.startswith('Bearer '):
         token = auth_header.split(' ')[1]
