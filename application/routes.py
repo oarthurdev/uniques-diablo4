@@ -43,7 +43,7 @@ def set_access_token_cookie(response, token):
         token,
         httponly=False,
         secure=True,
-        samesite='Lax',
+        samesite='None',
         max_age=60*60*24*7,  # 7 days
         domain="uniques-diablo4.vercel.app"
     )
