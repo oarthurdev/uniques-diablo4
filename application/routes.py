@@ -98,11 +98,10 @@ def callback():
     jwt_token = generate_token(user_info)
     save_token_to_db(user_id, jwt_token)
 
-    access_token = create_access_token(identity=user_info, expires_delta=timedelta(days=7))
     response = make_response(redirect(url_for('main.index')))
     response.set_cookie(
         'access_token_cookie',
-        access_token,
+        jwt_token,
         httponly=False,  # Only accessible via HTTP (not JavaScript)
         secure=True,    # Only sent over HTTPS
         samesite='Lax', # SameSite attribute for cross-site request handling
