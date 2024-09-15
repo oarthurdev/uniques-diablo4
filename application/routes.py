@@ -41,7 +41,7 @@ def set_access_token_cookie(response, token):
     response.set_cookie(
         'access_token_cookie',
         token,
-        httponly=True,
+        httponly=False,
         secure=True,
         samesite='Lax',
         max_age=60*60*24*7,  # 7 days
