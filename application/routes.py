@@ -137,6 +137,7 @@ def index():
     favorites = []
 
     token = request.cookies.get('access_token_cookie')
+    print(token)
     if token:
         try:
             decoded_token = decode_token(token)
