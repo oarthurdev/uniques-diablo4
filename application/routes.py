@@ -113,8 +113,6 @@ def callback():
 @bp.route('/')
 @jwt_required(optional=True)
 def index():
-    a = get_jwt_identity()
-    print("Identity: ", a)
     uniques = get_uniques() or []
     filter_class = request.args.get('class', '')
     filter_name = request.args.get('name', '').lower()
@@ -138,14 +136,14 @@ def index():
     favorites = []
 
     token = request.cookies.get('access_token_cookie')
-    print(token)
+
     if token:
         try:
             decoded_token = decode_token(token)
-            sub = decoded_token.get('sub')
-            if sub and 'user_info' in sub:
-                user_info = {'id': sub['user_info']['id'], 'battletag': sub['user_info']['battletag']}
-                favorites = [fav.item_name for fav in Favorite.query.filter_by(user_id=sub['user_info']['id']).all()]
+
+            if 'user_info' in decoded_token.get('sub', {}):
+                user_info = decoded_token['sub']['user_info']
+                favorites = [fav.item_name for fav in Favorite.query.filter_by(user_id=user_info['id']).all()]
         except Exception as e:
             print(f"Error extracting user info: {e}")
 
@@ -162,7 +160,6 @@ def index():
     )
 
 @bp.route('/add_favorite', methods=['POST'])
-@jwt_required()
 def add_favorite():
     auth_header = request.headers.get('Authorization')
     a = get_jwt_identity()
@@ -200,10 +197,7 @@ def add_favorite():
     return jsonify({'status': 'Favorite added successfully', 'success': True}), 200
     
 @bp.route('/remove_favorite', methods=['POST'])
-@jwt_required()
 def remove_favorite():
-    a = get_jwt_identity()
-    print("Identity: ", a)
     auth_header = request.headers.get('Authorization')
     if auth_header and auth_header.startswith('Bearer '):
         token = auth_header.split(' ')[1]
