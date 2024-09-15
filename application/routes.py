@@ -99,15 +99,8 @@ def callback():
     save_token_to_db(user_id, jwt_token)
 
     response = make_response(redirect(url_for('main.index')))
-    response.set_cookie(
-        'access_token_cookie',
-        jwt_token,
-        httponly=False,  # Cookie apenas acessível via HTTP
-        samesite='Lax',
-        secure=True,
-        max_age=60*60*24*7  # 7 dias
-    )
-
+    set_access_cookies(response, jwt_token, expires_delta=timedelta(days=7))
+    
     return response
 
 @bp.route('/')
@@ -291,7 +284,7 @@ def update_local_data():
                     'type': codex_name_to_item[label]['type'],
                     'label': item.get('label', ''),
                     'class': codex_name_to_item[label]['class'],
-                    'description': codex_name_to_item[label]['description'],
+                    'description': item.get('description', 'Descrição não disponível'),
                     'image_url': codex_name_to_item[label]['image_url']
                 })
 
