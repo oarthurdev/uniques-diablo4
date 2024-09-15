@@ -296,9 +296,9 @@
 
         document.addEventListener("DOMContentLoaded", function() {
             if (access_token) {
-                setCookie(access_token)
+                setCookie("access_token_cookie", access_token)
             }
-            
+
             const logoutBtn2 = document.getElementById('logout-btn');
 
             if (logoutBtn2) {
