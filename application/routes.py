@@ -160,6 +160,7 @@ def index():
     )
 
 @bp.route('/add_favorite', methods=['POST'])
+@jwt_required()
 def add_favorite():
     auth_header = request.headers.get('Authorization')
     a = get_jwt_identity()
