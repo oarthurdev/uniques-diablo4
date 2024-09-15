@@ -180,12 +180,13 @@ def index():
 @bp.route('/add_favorite', methods=['POST'])
 def add_favorite():
     auth_header = request.headers.get('Authorization')
-    if auth_header and auth_header.startswith('Bearer '):        
+    if auth_header and auth_header.startswith('Bearer '):
+        token = auth_header.split(' ')[1]
+        print(token)
         try:
-            token = auth_header.split(' ')[1]
             decoded_token = decode_jwt_token(token, Config.SECRET_KEY, Config.ALG_JWT)
             sub = decoded_token.get('sub')
-            user_id = sub['id']
+            user_id = sub['user_info']['id']
         except KeyError as e:
             print(f"KeyError: {str(e)}")
             return jsonify({'error': 'Invalid token structure', 'success': False}), 401
