@@ -262,43 +262,7 @@
     
         const access_token = getCookie('access_token_cookie');
 
-        function setCookie(name, value, days = 7, path = '/', domain = '', secure = false, sameSite = 'Lax') {
-            let cookieString = `${encodeURIComponent(name)}=${encodeURIComponent(value)}`;
-
-            // Adiciona a data de expiração, se especificada
-            if (days) {
-                const expiresDate = new Date();
-                expiresDate.setTime(expiresDate.getTime() + (days * 24 * 60 * 60 * 1000)); // dias em milissegundos
-                cookieString += `; expires=${expiresDate.toUTCString()}`;
-            }
-
-            // Adiciona o caminho, se especificado
-            if (path) {
-                cookieString += `; path=${path}`;
-            }
-
-            // Adiciona o domínio, se especificado
-            if (domain) {
-                cookieString += `; domain=${domain}`;
-            }
-
-            // Adiciona a flag secure, se especificada
-            if (secure) {
-                cookieString += `; secure`;
-            }
-
-            // Adiciona o atributo SameSite
-            cookieString += `; samesite=${sameSite}`;
-
-            // Define o cookie
-            document.cookie = cookieString;
-        }
-
         document.addEventListener("DOMContentLoaded", function() {
-            if (access_token) {
-                setCookie("access_token_cookie", access_token)
-            }
-
             const logoutBtn2 = document.getElementById('logout-btn');
 
             if (logoutBtn2) {
