@@ -1,6 +1,6 @@
 from flask import Blueprint, g, request, jsonify, redirect, session, url_for, render_template, Response, abort, make_response
 import requests
-from flask_jwt_extended import create_access_token, decode_token, jwt_required, get_jwt_identity, unset_jwt_cookies, set_access_cookies, get_jwt
+from flask_jwt_extended import create_access_token, decode_token, jwt_required, unset_jwt_cookies
 from .utils import fetch_data_with_retry, save_data_to_file, load_data_from_file
 from .models import db, User, Favorite
 from .config import Config
@@ -13,46 +13,41 @@ bp = Blueprint('main', __name__)
 def jwt_middleware(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        # Check if the token is present in the cookies
         token = request.cookies.get('access_token_cookie')
         if token:
             try:
-                # Decode the token to get user info
                 decoded_token = decode_token(token)
                 user_info = decoded_token.get('sub', {}).get('user_info')
-                
-                if user_info:
-                    # Attach user_info to g (global context) for use in view functions
-                    g.user_info = user_info
-                else:
-                    g.user_info = None
+                g.user_info = user_info if user_info else None
             except Exception as e:
                 print(f"Token decode error: {e}")
                 g.user_info = None
         else:
             g.user_info = None
-        
         return f(*args, **kwargs)
-    
     return decorated_function
 
-# Funções auxiliares
-
 def generate_token(user_info, expires_days=7):
-    """
-    Gera um token JWT para o usuário.
-    """
     expires_delta = timedelta(days=expires_days)
     return create_access_token(identity={'user_info': user_info}, expires_delta=expires_delta)
 
 def save_token_to_db(user_id, token):
-    """
-    Salva o token JWT no banco de dados.
-    """
     user = User.query.get(user_id)
     if user:
         user.jwt_token = token
         db.session.commit()
+
+def set_access_token_cookie(response, token):
+    response.set_cookie(
+        'access_token_cookie',
+        token,
+        httponly=True,
+        secure=True,
+        samesite='Lax',
+        max_age=60*60*24*7,  # 7 days
+        domain="uniques-diablo4.vercel.app"
+    )
+    return response
 
 @bp.before_request
 @jwt_middleware
@@ -130,12 +125,12 @@ def callback():
     save_token_to_db(user_id, jwt_token)
 
     response = make_response(redirect(url_for('main.index')))
+    set_access_token_cookie(response, jwt_token)
     
     return response
 
 @bp.route('/')
 @jwt_required(optional=True)
-@jwt_middleware()
 def index():
     uniques = get_uniques() or []
     filter_class = request.args.get('class', '')
@@ -160,13 +155,9 @@ def index():
     favorites = []
 
     if user_info:
-        # Retrieve JWT token from the database
-        print("User info: ", user_info)
         user_id = user_info['id']
         user = User.query.get(user_id)
-        print("User: ", user)
         if user and user.jwt_token:
-            # Set the access cookie with the retrieved token
             response = make_response(render_template(
                 'index.html',
                 uniques=paginated_uniques,
@@ -178,20 +169,20 @@ def index():
                 user_info=user_info,
                 favorites=favorites
             ))
-
-            response.set_cookie(
-                'access_token_cookie',
-                user.jwt_token,
-                httponly=False,  # Only accessible via HTTP (not JavaScript)
-                secure=True,    # Only sent over HTTPS
-                samesite='Lax', # SameSite attribute for cross-site request handling
-                max_age=60*60*24*7,  # 7 days
-                domain="uniques-diablo4.vercel.app"
-            )
-            
+            set_access_token_cookie(response, user.jwt_token)
+            favorites = [fav.item_name for fav in Favorite.query.filter_by(user_id=user_id).all()]
+            response.set_data(render_template(
+                'index.html',
+                uniques=paginated_uniques,
+                all_classes=all_classes,
+                filter_class=filter_class,
+                filter_name=filter_name,
+                page=page,
+                total_pages=total_pages,
+                user_info=user_info,
+                favorites=favorites
+            ))
             return response
-
-        favorites = [fav.item_name for fav in Favorite.query.filter_by(user_id=user_id).all()]
 
     return render_template(
         'index.html',
