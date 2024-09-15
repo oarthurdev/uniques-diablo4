@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify, redirect, session, url_for, render_template, Response, abort, make_response
 import requests
-from flask_jwt_extended import decode_token, jwt_required, get_jwt_identity, unset_jwt_cookies, set_access_cookies, get_jwt
-from .utils import fetch_data_with_retry, save_data_to_file, load_data_from_file, decode_jwt_token, create_access_token
+from flask_jwt_extended import create_access_token, decode_token, jwt_required, get_jwt_identity, unset_jwt_cookies, set_access_cookies, get_jwt
+from .utils import fetch_data_with_retry, save_data_to_file, load_data_from_file, decode_jwt_token
 from .models import db, User, Favorite
 from .config import Config
 import secrets
@@ -13,18 +13,9 @@ bp = Blueprint('main', __name__)
 
 def generate_token(user_info):
     """
-    Gera um token JWT para o usuário com o campo 'sub'.
+    Gera um token JWT para o usuário.
     """
-    # Incluindo o campo 'sub' no payload
-    payload = {
-        'sub': user_info  # ou você pode ajustar conforme necessário
-    }
-    token = create_access_token(
-        identity=payload, 
-        secret_key=Config.SECRET_KEY, 
-        algorithm=Config.ALG_JWT
-    )
-    return token
+    return create_access_token(identity={'user_info': user_info})
 
 def save_token_to_db(user_id, token):
     """
@@ -147,23 +138,11 @@ def index():
         try:
             decoded_token = decode_token(token)
             sub = decoded_token.get('sub')
-
-            if sub:
-                # Extraia o ID e battletag do user_info
-                user_id = sub.get('id')
-                battletag = sub.get('battletag')
-                if user_id is not None and battletag is not None:
-                    user_info = {'id': user_id, 'battletag': battletag}
-                    # Consulta favoritos do usuário
-                    favorites = [fav.item_name for fav in Favorite.query.filter_by(user_id=user_id).all()]
-                else:
-                    print("User info is missing required fields")
-            else:
-                print("User info not found in token")
+            if sub and 'user_info' in sub:
+                user_info = {'id': sub['user_info']['id'], 'battletag': sub['user_info']['battletag']}
+                favorites = [fav.item_name for fav in Favorite.query.filter_by(user_id=sub['user_info']['id']).all()]
         except Exception as e:
             print(f"Error extracting user info: {e}")
-    else:
-        print("No token found in cookies")
 
     return render_template(
         'index.html',
@@ -182,11 +161,11 @@ def add_favorite():
     auth_header = request.headers.get('Authorization')
     if auth_header and auth_header.startswith('Bearer '):
         token = auth_header.split(' ')[1]
+        
         try:
-            decoded_token = decode_jwt_token(token, Config.SECRET_KEY, "['HS256']")
-            print(decoded_token)
+            decoded_token = decode_jwt_token(token, Config.SECRET_KEY, Config.ALG_JWT)
             sub = decoded_token.get('sub')
-            user_id = sub['id']
+            user_id = sub['user_info']['id']
         except KeyError as e:
             print(f"KeyError: {str(e)}")
             return jsonify({'error': 'Invalid token structure', 'success': False}), 401
