@@ -162,8 +162,11 @@ def index():
     )
 
 @bp.route('/add_favorite', methods=['POST'])
+@jwt_required()
 def add_favorite():
     auth_header = request.headers.get('Authorization')
+    a = get_jwt_identity()
+    print("Identity: ", a)
     if auth_header and auth_header.startswith('Bearer '):
         token = auth_header.split(' ')[1]
         print(f"Token received: {token}")
