@@ -105,7 +105,8 @@ def callback():
         httponly=False,  # Only accessible via HTTP (not JavaScript)
         secure=True,    # Only sent over HTTPS
         samesite='Lax', # SameSite attribute for cross-site request handling
-        max_age=60*60*24*7  # 7 days
+        max_age=60*60*24*7  # 7 days,
+        domain="uniques-diablo4.vercel.app"
     )
     
     return response
