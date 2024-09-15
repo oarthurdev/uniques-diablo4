@@ -99,7 +99,7 @@ def callback():
     save_token_to_db(user_id, jwt_token)
 
     response = make_response(redirect(url_for('main.index')))
-    set_access_cookies(response, jwt_token, expires_delta=timedelta(days=7))
+    set_access_cookies(response, jwt_token, timedelta(days=7))
     
     return response
 
