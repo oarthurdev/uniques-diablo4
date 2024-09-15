@@ -135,6 +135,7 @@ def callback():
 
 @bp.route('/')
 @jwt_required(optional=True)
+@jwt_middleware()
 def index():
     uniques = get_uniques() or []
     filter_class = request.args.get('class', '')
