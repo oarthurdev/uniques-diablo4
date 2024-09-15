@@ -4,6 +4,7 @@ from flask_jwt_extended import create_access_token, decode_token, jwt_required, 
 from .utils import fetch_data_with_retry, save_data_to_file, load_data_from_file
 from .models import db, User, Favorite
 from .config import Config
+from datetime import timedelta
 import secrets
 import logging
 
@@ -11,11 +12,12 @@ bp = Blueprint('main', __name__)
 
 # Funções auxiliares
 
-def generate_token(user_info):
+def generate_token(user_info, expires_days=7):
     """
     Gera um token JWT para o usuário.
     """
-    return create_access_token(identity={'user_info': user_info})
+    expires_delta = timedelta(days=expires_days)
+    return create_access_token(identity={'user_info': user_info}, expires_delta=expires_delta)
 
 def save_token_to_db(user_id, token):
     """
