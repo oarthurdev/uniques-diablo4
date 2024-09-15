@@ -259,23 +259,18 @@
         let filteredItems = {{ uniques | tojson | safe }};
         let total_pages = {{ total_pages }};
         let favorites = new Set({{ favorites | tojson | safe }}.map(item => item.toLowerCase()));
-    
-        const access_token = getCookie('access_token_cookie');
 
         document.addEventListener("DOMContentLoaded", function() {
             const logoutBtn2 = document.getElementById('logout-btn');
 
             if (logoutBtn2) {
                 logoutBtn2.addEventListener('click', function() {
-                    // Obtenha o token de acesso dos cookies
-                    const accessToken = getCookie('access_token_cookie');
                     
                     fetch('{{ url_for('main.logout') }}', {
                         method: 'POST',
                         credentials: 'include', // Inclua cookies na requisição
                         headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': 'Bearer ' + accessToken
+                            'Content-Type': 'application/json'
                         }
                     })
                     .then(response => {
@@ -465,38 +460,17 @@
                 });
             });
         }
-
-        // Get the value of a specific cookie
-        function getCookie(name) {
-            const nameEQ = name + "=";
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                let c = cookies[i];
-                while (c.charAt(0) === ' ') c = c.substring(1);
-                if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
-            }
-            return null; // Cookie not found
-        }
-
+        
         function toggleFavorite(itemName) {
             const itemNameLower = itemName.toLowerCase();
             const isFavorite = favorites.has(itemNameLower);
             const url = isFavorite ? '/remove_favorite' : '/add_favorite';
-            const access_token = getCookie('access_token_cookie');
-
-            if (!access_token) {
-                console.error('Access token is null. Check if the cookie is set correctly.');
-                return;
-            }
-
-            console.log('Access token:', access_token);
 
             fetch(url, {
                 method: 'POST',
                 credentials: 'include',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + access_token
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ item_name: itemName })
             })
@@ -516,9 +490,6 @@
                 console.error('Error in fetch:', error);
             });
         }
-
-        // Debugging: Log all cookies
-        console.log('All cookies:', document.cookie);
 
         function updateFavoriteButtons() {
             document.querySelectorAll('.favorite-btn').forEach(button => {
