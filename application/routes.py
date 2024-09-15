@@ -183,8 +183,8 @@ def add_favorite():
     if auth_header and auth_header.startswith('Bearer '):
         token = auth_header.split(' ')[1]
         try:
-            print(token)
-            decoded_token = decode_jwt_token(token, Config.SECRET_KEY, Config.ALG_JWT)
+            decoded_token = decode_jwt_token(token, Config.SECRET_KEY, "['HS256']")
+            print(decoded_token)
             sub = decoded_token.get('sub')
             user_id = sub['id']
         except KeyError as e:
