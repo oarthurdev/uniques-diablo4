@@ -160,8 +160,10 @@ def index():
 
     if user_info:
         # Retrieve JWT token from the database
+        print("User info: ", user_info)
         user_id = user_info['id']
         user = User.query.get(user_id)
+        print("User: ", user)
         if user and user.jwt_token:
             # Set the access cookie with the retrieved token
             response = make_response(render_template(
