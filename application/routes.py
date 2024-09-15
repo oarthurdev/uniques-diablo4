@@ -113,6 +113,8 @@ def callback():
 @bp.route('/')
 @jwt_required(optional=True)
 def index():
+    a = get_jwt_identity()
+    print("Identity: ", a)
     uniques = get_uniques() or []
     filter_class = request.args.get('class', '')
     filter_name = request.args.get('name', '').lower()
