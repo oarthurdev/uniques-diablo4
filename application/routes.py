@@ -157,8 +157,7 @@ def index():
     if user_info:
         user_id = user_info['id']
         user = User.query.get(user_id)
-        print(user_info)
-        print(user)
+        print(user.jwt_token)
         if user and user.jwt_token:
             response = make_response(render_template(
                 'index.html',
